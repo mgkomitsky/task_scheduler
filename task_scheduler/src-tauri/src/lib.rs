@@ -14,16 +14,17 @@ fn greet(name: &str) -> String {
 fn test(){
 
 
-    let file_content = "\
----
-id: \"TASK-001\"
-title: \"Fix the auth token bug\"
----
-## Notes
-Some notes here.
-";
+//     let file_content = "\
+// ---
+// id: \"TASK-001\"
+// title: \"Fix the auth token bug\"
+// ---
+// ## Notes
+// Some notes here.
+// ";
 
-    let item = parse_item(file_content);
+ let file_content = std::fs::read_to_string("/Users/mkomitsky/All My Stuff/Project_Scheduler/_task.md").unwrap();
+    let item = parse_item(&file_content);
     println!("{:#?}", item);
 }
 
