@@ -1,7 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 mod parser;
-use crate::parser::parse_item;
+use crate::parser::parse_all_items;
 
 
 #[tauri::command]
@@ -14,9 +14,9 @@ fn greet(name: &str) -> String {
 fn test(){
 
 
- let file_content = std::fs::read_to_string("/Users/mkomitsky/All My Stuff/Project_Scheduler/_task.md").unwrap();
-    let item = parse_item(&file_content);
-    println!("{:#?}", item);
+ //let file_content = std::fs::read_to_string("/Users/mkomitsky/All My Stuff/Project_Scheduler/_task.md").unwrap();
+    let tasks = parse_all_items("/Users/mkomitsky/All My Stuff/Project_Scheduler/");
+    println!("{:#?}", tasks);
 }
 
 
