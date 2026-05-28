@@ -1,8 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 mod parser;
-
-
+use crate::parser::parse_item;
 
 
 #[tauri::command]
@@ -13,7 +12,19 @@ fn greet(name: &str) -> String {
 
 #[tauri::command]
 fn test(){
-    println!("HI!!!!");
+
+
+    let file_content = "\
+---
+id: \"TASK-001\"
+title: \"Fix the auth token bug\"
+---
+## Notes
+Some notes here.
+";
+
+    let item = parse_item(file_content);
+    println!("{:#?}", item);
 }
 
 
