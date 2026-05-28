@@ -12,8 +12,6 @@ fn greet(name: &str) -> String {
 
 #[tauri::command]
 fn test(){
-
-
  //let file_content = std::fs::read_to_string("/Users/mkomitsky/All My Stuff/Project_Scheduler/_task.md").unwrap();
     let tasks = parse_all_items("/Users/mkomitsky/All My Stuff/Project_Scheduler/");
     println!("{:#?}", tasks);
