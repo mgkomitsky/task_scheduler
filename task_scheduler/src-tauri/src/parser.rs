@@ -1,6 +1,7 @@
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Task {
     id: String,
     title: String,
@@ -18,6 +19,10 @@ pub struct Task {
     ask: String,
     outcome: String,
 }
+
+
+
+
 
 pub fn parse_item(file_content: &str) -> Task {
     let first = file_content.strip_prefix("---\n").unwrap();
