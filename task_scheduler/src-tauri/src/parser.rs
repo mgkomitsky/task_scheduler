@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
+use std::collections::HashMap;
+
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Task {
     id: String,
@@ -20,7 +22,42 @@ pub struct Task {
     outcome: String,
 }
 
+#[derive(Debug, Deserialize, Clone, Serialize)]
+pub struct TaskNode {
+    pub task: Task,
+    pub sub_rows: Vec<TaskNode>,
+}
 
+pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
+
+    let mut map: HashMap<String, TaskNode> = tasks
+    .into_iter().map(|t| (t.id.clone(), TaskNode {task: t, sub_rows: vec![]}))
+    .collect();
+
+
+    let ids: Vec<String> = map.keys().map(|s| s.clone()).collect();
+
+    for id in &ids {
+        let depends_on = match map.get(id){
+            Some(node) => node.task.depends_on.clone(),
+            None => continue,
+        };
+
+        for blocker_id in depends_on {
+            if blocker_id == *id {
+                continue;
+            }
+
+            if let Some(blocker) = map.remove(&blocker_id) {
+                if let Some(node) = map.get_mut(id) {
+                node.sub_rows.push(blocker);
+            }
+            }
+            
+        }
+    }
+    map.into_values().collect()
+}
 
 
 
@@ -53,3 +90,8 @@ pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
     tasks
 
 }
+
+
+
+
+

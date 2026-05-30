@@ -1,8 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 mod parser;
-use crate::parser::parse_all_items;
-use crate::parser::Task;
+use crate::parser::{Task, TaskNode, parse_all_items, build_tree};
 use std::sync::Mutex;
 use::tauri::State;
 
@@ -15,7 +14,7 @@ struct AppState {
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
-}
+} 
 
 
 #[tauri::command]
@@ -28,6 +27,13 @@ fn test(){
 #[tauri::command]
 fn get_tasks(state: State<AppState>) -> Vec<Task> {
     state.tasks.lock().unwrap().clone()
+}
+
+
+#[tauri::command]
+fn get_tree(state: State<AppState>) -> Vec<TaskNode> {
+    let tasks = state.tasks.lock().unwrap().clone();
+    build_tree(tasks)
 }
 
 // #[tauri::command]
@@ -49,7 +55,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(app_state)
-        .invoke_handler(tauri::generate_handler![greet, test, get_tasks])
+        .invoke_handler(tauri::generate_handler![greet, test, get_tasks, get_tree])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

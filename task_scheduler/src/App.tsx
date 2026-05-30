@@ -5,10 +5,16 @@ import { useEffect } from 'react'
 function App() {
   const [tasks, setTasks] = useState([])
 
-  useEffect(() => {
-    invoke('get_tasks').then((tasks) => {
-      console.log(tasks)
-      setTasks(tasks as any[])
+  // useEffect(() => {
+  //   invoke('get_tasks').then((tasks) => {
+  //     console.log(tasks)
+  //     setTasks(tasks as any[])
+  //   })
+  // }, [])
+
+   useEffect(() => {
+    invoke('get_tree').then((tree) => {
+      console.log(tree)
     })
   }, [])
 
