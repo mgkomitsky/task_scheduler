@@ -1,123 +1,129 @@
-import styles from './TaskTable.module.css'
-
 import {
-    useReactTable,
-    getCoreRowModel,
-    getExpandedRowModel,
-    flexRender,
-    createColumnHelper,
-} from '@tanstack/react-table'
-import { useState } from 'react'
-import { TaskNode } from './types'
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+  getExpandedRowModel,
+} from "@tanstack/react-table";
+import { useState } from "react";
+import "./TaskTable.css";
 
-const columnHelper = createColumnHelper<TaskNode>()
+const statusColors: Record<string, string> = {
+  open: "#ffd700",
+  blocked: "#ff6b6b",
+  closed: "#4dff91",
+};
+
+const statusBackground: Record<string, string> = {
+  open: "#3d3a1a",
+  blocked: "#3d1a1a",
+  closed: "#1a3d2a",
+};
+
+const priorityColors: Record<string, string> = {
+  low: "#ffd700",
+  medium: "#ff6b6b",
+  high: "#4dff91",
+};
+
+const priorityBackground: Record<string, string> = {
+  low: "#3d3a1a",
+  medium: "#3d1a1a",
+  high: "#1a3d2a",
+};
 
 const columns = [
-    columnHelper.accessor(row => row.task.id, {
-        id: 'id',
-        header: 'ID',
-    }),
-    columnHelper.accessor(row => row.task.title, {
-        id: 'title',
-        header: 'Title',
-    }),
-    columnHelper.accessor(row => row.task.status, {
-        id: 'status',
-        header: 'Status',
-    }),
-    columnHelper.accessor(row => row.task.priority, {
-        id: 'priority',
-        header: 'Priority',
-    }),
-    columnHelper.accessor(row => row.task.due, {
-        id: 'due',
-        header: 'Due',
-    }),
-]
-
-interface Props {
-    data: TaskNode[]
-    onDoubleClick: (task: TaskNode) => void
-}
-
-// The expand/collapse button
-function ExpandButton({ row }: { row: any }) {
-  return (
-    <span style={{ width: '20px', display: 'inline-block' }}>
-      {row.getCanExpand() && (
-        <button
-          className={styles.expandBtn}
-          onClick={e => {
-            e.stopPropagation()
-            row.toggleExpanded()
+  {
+    accessorKey: "title",
+    header: "Title",
+    cell: (props: any) => <p>{props.row.original.task.title}</p>,
+  },
+  {
+    accessorKey: "status",
+    header: "Status",
+    cell: (props: any) => {
+      const status = props.row.original.task.status;
+      return (
+        <span
+          style={{
+            background: statusBackground[status] ?? "#2a2a2a",
+            color: statusColors[status] ?? "#888",
+            padding: "2px 8px",
+            borderRadius: "20px",
+            fontSize: "11px",
+            fontWeight: 500,
           }}
         >
-          {row.getIsExpanded() ? '▾' : '▸'}
-        </button>
-      )}
-    </span>
-  )
-}
-
-// A single table row
-function TaskRow({ row, onDoubleClick }: { row: any, onDoubleClick: (task: TaskNode) => void }) {
-  return (
-    <tr className={styles.row} onDoubleClick={() => onDoubleClick(row.original)}>
-      {row.getVisibleCells().map((cell: any, i: number) => (
-        <td
-          key={cell.id}
-          className={styles.cell}
-          style={i === 0 ? { paddingLeft: `${row.depth * 20 + 12}px` } : {}}
+          {status}
+        </span>
+      );
+    },
+  },
+  {
+    accessorKey: "priority",
+    header: "Priority",
+    cell: (props: any) => {
+      const priority = props.row.original.task.priority;
+      return (
+        <span
+          style={{
+            background: priorityBackground[priority] ?? "#2a2a2a",
+            color: priorityColors[priority] ?? "#888",
+            padding: "2px 8px",
+            borderRadius: "20px",
+            fontSize: "11px",
+            fontWeight: 500,
+          }}
         >
-          {i === 0 && <ExpandButton row={row} />}
-          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-        </td>
-      ))}
-    </tr>
-  )
-}
+          {priority}
+        </span>
+      );
+    },
+  },
+];
 
-// The table headers
-function TableHeaders({ table }: { table: any }) {
+export const TaskTable = ({ data, onDoubleClick }: any) => {
+  const [expanded, setExpanded] = useState(true);
+  const table = useReactTable({
+    data,
+    columns,
+    state: { expanded },
+    onExpandedChange: setExpanded,
+    getSubRows: (row) => row.sub_rows, // ← must match your field name
+    getCoreRowModel: getCoreRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+  });
+
+  console.log(table.getHeaderGroups());
   return (
-    <thead>
-      <tr>
-        {table.getFlatHeaders().map((header: any) => (
-          <th key={header.id} className={styles.header}>
-            {flexRender(header.column.columnDef.header, header.getContext())}
-          </th>
+    <div>
+      <div className="table">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <div className="tr" key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <div className="th" key={header.id}>
+                {header.column.columnDef.header}
+              </div>
+            ))}
+          </div>
         ))}
-      </tr>
-    </thead>
-  )
-}
 
-export function TaskTable({ data, onDoubleClick }: Props) {
-    const [expanded, setExpanded] = useState({})
+        {table.getRowModel().rows.map((row) => (
+          <div
+            className="tr"
+            key={row.id}
+            style={{ paddingLeft: `${row.depth * 20}px` }}
+            onDoubleClick={() => onDoubleClick(row.original)}
+          >
+            {row.getVisibleCells().map((cell) => (
+              <div className="td" key={cell.id}>
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
-    const table = useReactTable({
-        data,
-        columns,
-        state: { expanded },
-        onExpandedChange: setExpanded,
-        getSubRows: row => row.sub_rows,
-        getCoreRowModel: getCoreRowModel(),
-        getExpandedRowModel: getExpandedRowModel(),
-    })
-
-
-
-return (
-  <table className={styles.table}>
-    <TableHeaders table={table} />
-    <tbody>
-      {table.getRowModel().rows.map(row => (
-        <TaskRow key={row.id} row={row} onDoubleClick={onDoubleClick} />
-      ))}
-    </tbody>
-  </table>
-)
-
-
-
-}
+export default TaskTable;

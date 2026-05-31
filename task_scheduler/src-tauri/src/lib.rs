@@ -36,6 +36,12 @@ fn get_tree(state: State<AppState>) -> Vec<TaskNode> {
     build_tree(tasks)
 }
 
+
+#[tauri::command]
+fn get_task_body(path: String) -> String {
+    std::fs::read_to_string(&path).unwrap()
+}
+
 // #[tauri::command]
 // fn refresh_tasks() {
 //     let tasks = parse_all_items("/Users/mkomitsky/All My Stuff/Project_Scheduler/");
@@ -55,7 +61,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
         .manage(app_state)
-        .invoke_handler(tauri::generate_handler![greet, test, get_tasks, get_tree])
+        .invoke_handler(tauri::generate_handler![greet, test, get_tasks, get_tree, get_task_body])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

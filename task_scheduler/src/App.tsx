@@ -1,45 +1,58 @@
-import { useState } from "react"
-import { invoke } from "@tauri-apps/api/core"
-import { useEffect } from 'react'
+import { useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { useEffect } from "react";
 
-import { TaskTable } from './TaskTable'
-import { TaskNode } from './types'
-
-import styles from './App.module.css'
+import { TaskTable } from "./TaskTable";
+import { TaskNode } from "./types";
 
 function App() {
-  const [tasks, setTasks] = useState([])
-  const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null)
-
-  // useEffect(() => {
-  //   invoke('get_tasks').then((tasks) => {
-  //     console.log(tasks)
-  //     setTasks(tasks as any[])
-  //   })
-  // }, [])
+  const [tasks, setTasks] = useState<TaskNode[]>([]);
+  const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null);
+  const [fileContent, setFileContent] = useState<string>("");
 
   useEffect(() => {
-    invoke('get_tree').then((tree) => {
-      console.log(tree)
-      setTasks(tree as TaskNode[])
-    })
-  }, [])
+    invoke("get_tree").then((tree) => {
+      setTasks(tree as TaskNode[]);
+    });
+  }, []);
+
+  function handleDoubleClick(task: TaskNode) {
+    setSelectedTask(task);
+    invoke("get_task_body", { path: task.task.path }).then((content) => {
+      setFileContent(content as string);
+    });
+  }
 
   return (
-    <div className={styles.layout}>
-      <div className={styles.tablePane}>
-        <TaskTable data={tasks} onDoubleClick={setSelectedTask} />
+    <div style={{ display: "flex", height: "100vh" }}>
+      <div style={{ width: "45%", borderRight: "1px solid #333" }}>
+        <TaskTable data={tasks} onDoubleClick={handleDoubleClick} />
       </div>
 
-      <div className={styles.editorPane}>
-        {
-          selectedTask
-            ? <div>{selectedTask.task.title}</div>
-            : <div className={styles.emptyState}>Double click a task to edit</div>
-        }
+      <div style={{ flex: 1 }}>
+        {selectedTask ? (
+          <textarea
+            style={{
+              width: "100%",
+              height: "100%",
+              background: "#1e1e1e",
+              color: "#d4d4d4",
+              border: "none",
+              padding: "16px",
+              fontSize: "13px",
+              fontFamily: "monospace",
+            }}
+            value={fileContent}
+            onChange={(e) => setFileContent(e.target.value)}
+          />
+        ) : (
+          <p style={{ color: "#666", padding: "20px" }}>
+            Double click a task to edit
+          </p>
+        )}
       </div>
-    </div >
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;

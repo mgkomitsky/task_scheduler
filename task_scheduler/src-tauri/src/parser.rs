@@ -21,6 +21,8 @@ pub struct Task {
     risk: String,
     ask: String,
     outcome: String,
+    #[serde(skip_deserializing, default)]
+    path: String, 
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
@@ -75,6 +77,8 @@ pub fn parse_item(file_content: &str) -> Task {
     serde_yaml::from_str(yaml_block).unwrap()
 }
 
+
+
 pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
 
     let mut tasks = Vec::new();
@@ -90,7 +94,8 @@ pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
         }
 
         let file_content = std::fs::read_to_string(&path).unwrap();
-        let task = parse_item(&file_content);
+        let mut task = parse_item(&file_content);
+        task.path = path.to_str().unwrap().to_string();
         tasks.push(task);
     }
 
