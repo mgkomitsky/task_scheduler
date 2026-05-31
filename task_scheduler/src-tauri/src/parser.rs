@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 
 use std::collections::HashMap;
+use std::collections::HashSet;
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Task {
@@ -30,6 +31,9 @@ pub struct TaskNode {
 
 pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
 
+
+    let mut nested_ids: HashSet<String> = HashSet::new();
+
     let mut map: HashMap<String, TaskNode> = tasks
     .into_iter().map(|t| (t.id.clone(), TaskNode {task: t, sub_rows: vec![]}))
     .collect();
@@ -43,20 +47,23 @@ pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
             None => continue,
         };
 
-        for blocker_id in depends_on {
+        for blocker_id in depends_on { //Cannot block itself?
             if blocker_id == *id {
                 continue;
             }
 
-            if let Some(blocker) = map.remove(&blocker_id) {
+            if let Some(blocker) = map.get(&blocker_id).cloned() {
                 if let Some(node) = map.get_mut(id) {
                 node.sub_rows.push(blocker);
+                nested_ids.insert(blocker_id.clone());
             }
             }
             
         }
     }
-    map.into_values().collect()
+    map.into_values()
+   .filter(|node| !nested_ids.contains(&node.task.id))
+   .collect()
 }
 
 

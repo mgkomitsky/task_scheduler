@@ -1,0 +1,166 @@
+/* TaskTable.module.css */
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #1e1e1e;
+  color: #d4d4d4;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+}
+
+.tablePane {
+    width: 45%;
+    border-right: 1px solid #333;
+    overflow-y: auto;
+}
+
+.editorPane {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.header {
+  background-color: #252525;
+  color: #888888;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  padding: 8px 12px;
+  text-align: left;
+  border-bottom: 1px solid #333333;
+  position: sticky;
+  top: 0;
+}
+
+.row {
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.row:hover td {
+  background-color: #2a2a2a;
+}
+
+.rowActive td {
+  background-color: #1a3a5c;
+}
+
+.cell {
+  padding: 8px 12px;
+  border-bottom: 1px solid #2a2a2a;
+  vertical-align: middle;
+}
+
+.expandBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666666;
+  font-size: 11px;
+  margin-right: 6px;
+  padding: 0;
+  width: 14px;
+  display: inline-block;
+  text-align: center;
+}
+
+.expandBtn:hover {
+  color: #d4d4d4;
+}
+
+/* Status badges */
+.badgeOpen {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #2a2a2a;
+  color: #888888;
+  border: 1px solid #444444;
+}
+
+.badgeInProgress {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #1a3a5c;
+  color: #4da6ff;
+}
+
+.badgeBlocked {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #3d1a1a;
+  color: #ff6b6b;
+}
+
+.badgeDone {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #1a3d2a;
+  color: #4dff91;
+}
+
+/* Priority badges */
+.priorityHigh {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #3d2a1a;
+  color: #ffaa4d;
+}
+
+.priorityMedium {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #3d3a1a;
+  color: #ffd700;
+}
+
+.priorityLow {
+  display: inline-block;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-weight: 500;
+  background-color: #2a2a2a;
+  color: #888888;
+  border: 1px solid #444444;
+}
+
+/* Due date colors */
+.dueOverdue {
+  color: #ff6b6b;
+  font-size: 12px;
+}
+
+.dueSoon {
+  color: #ffd700;
+  font-size: 12px;
+}
+
+.dueOk {
+  color: #888888;
+  font-size: 12px;
+}
+
+/* Dependency rows — muted */
+.rowMuted td {
+  opacity: 0.5;
+}
