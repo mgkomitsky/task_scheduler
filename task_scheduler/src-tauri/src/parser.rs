@@ -22,7 +22,7 @@ pub struct Task {
     ask: String,
     outcome: String,
     #[serde(skip_deserializing, default)]
-    path: String, 
+    path: String,
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
@@ -31,44 +31,54 @@ pub struct TaskNode {
     pub sub_rows: Vec<TaskNode>,
 }
 
-pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
-
-
-    let mut nested_ids: HashSet<String> = HashSet::new();
-
-    let mut map: HashMap<String, TaskNode> = tasks
-    .into_iter().map(|t| (t.id.clone(), TaskNode {task: t, sub_rows: vec![]}))
-    .collect();
-
-
-    let ids: Vec<String> = map.keys().map(|s| s.clone()).collect();
-
-    for id in &ids {
-        let depends_on = match map.get(id){
-            Some(node) => node.task.depends_on.clone(),
-            None => continue,
-        };
-
-        for blocker_id in depends_on { //Cannot block itself?
-            if blocker_id == *id {
-                continue;
+fn build_node(id: &str, map: &HashMap<String, TaskNode>) -> TaskNode {
+    let node = map.get(id).unwrap().clone();
+    let sub_rows = node
+        .task
+        .depends_on
+        .iter()
+        .filter(|dep_id| *dep_id != id)
+        .filter_map(|dep_id| {
+            if map.contains_key(dep_id.as_str()) {
+                Some(build_node(dep_id, map))
+            } else {
+                None
             }
-
-            if let Some(blocker) = map.get(&blocker_id).cloned() {
-                if let Some(node) = map.get_mut(id) {
-                node.sub_rows.push(blocker);
-                nested_ids.insert(blocker_id.clone());
-            }
-            }
-            
-        }
+        })
+        .collect();
+    TaskNode {
+        task: node.task,
+        sub_rows,
     }
-    map.into_values()
-   .filter(|node| !nested_ids.contains(&node.task.id))
-   .collect()
 }
+pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
+    let map: HashMap<String, TaskNode> = tasks
+        .into_iter()
+        .map(|t| {
+            (
+                t.id.clone(),
+                TaskNode {
+                    task: t,
+                    sub_rows: vec![],
+                },
+            )
+        })
+        .collect();
 
+    let nested_ids: HashSet<String> = map
+        .values()
+        .flat_map(|node| node.task.depends_on.iter().cloned())
+        .collect();
 
+    let mut roots: Vec<TaskNode> = map
+        .keys()
+        .filter(|id| !nested_ids.contains(*id))
+        .map(|id| build_node(id, &map))
+        .collect();
+
+    roots.sort_by(|a, b| a.task.id.cmp(&b.task.id));
+    roots
+}
 
 pub fn parse_item(file_content: &str) -> Task {
     let first = file_content.strip_prefix("---\n").unwrap();
@@ -77,18 +87,14 @@ pub fn parse_item(file_content: &str) -> Task {
     serde_yaml::from_str(yaml_block).unwrap()
 }
 
-
-
 pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
-
     let mut tasks = Vec::new();
 
     for entry in std::fs::read_dir(folder_path).unwrap() {
-
         let entry = entry.unwrap();
         let path = entry.path();
 
-         // skip non-.md files
+        // skip non-.md files
         if path.extension().and_then(|e| e.to_str()) != Some("md") {
             continue;
         }
@@ -100,10 +106,4 @@ pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
     }
 
     tasks
-
 }
-
-
-
-
-

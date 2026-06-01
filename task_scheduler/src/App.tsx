@@ -11,10 +11,14 @@ function App() {
   const [fileContent, setFileContent] = useState<string>("");
 
   useEffect(() => {
+    fetchTasks();
+  }, []);
+
+  function fetchTasks() {
     invoke("get_tree").then((tree) => {
       setTasks(tree as TaskNode[]);
     });
-  }, []);
+  }
 
   function handleDoubleClick(task: TaskNode) {
     setSelectedTask(task);
@@ -26,7 +30,11 @@ function App() {
   return (
     <div style={{ display: "flex", height: "100vh" }}>
       <div style={{ width: "45%", borderRight: "1px solid #333" }}>
-        <TaskTable data={tasks} onDoubleClick={handleDoubleClick} />
+        <TaskTable
+          data={tasks}
+          onDoubleClick={handleDoubleClick}
+          onRefresh={fetchTasks}
+        />
       </div>
 
       <div style={{ flex: 1 }}>

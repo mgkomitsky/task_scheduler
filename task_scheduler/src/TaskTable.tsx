@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-table";
 import { useState } from "react";
 import "./TaskTable.css";
+import { invoke } from "@tauri-apps/api/core";
 
 const statusColors: Record<string, string> = {
   open: "#ffd700",
@@ -31,57 +32,71 @@ const priorityBackground: Record<string, string> = {
   high: "#1a3d2a",
 };
 
-const columns = [
-  {
-    accessorKey: "title",
-    header: "Title",
-    cell: (props: any) => <p>{props.row.original.task.title}</p>,
-  },
-  {
-    accessorKey: "status",
-    header: "Status",
-    cell: (props: any) => {
-      const status = props.row.original.task.status;
-      return (
-        <span
-          style={{
-            background: statusBackground[status] ?? "#2a2a2a",
-            color: statusColors[status] ?? "#888",
-            padding: "2px 8px",
-            borderRadius: "20px",
-            fontSize: "11px",
-            fontWeight: 500,
-          }}
-        >
-          {status}
-        </span>
-      );
+export const TaskTable = ({ data, onDoubleClick, onRefresh }: any) => {
+  const columns = [
+    {
+      accessorKey: "title",
+      header: "Title",
+      cell: (props: any) => <p>{props.row.original.task.title}</p>,
     },
-  },
-  {
-    accessorKey: "priority",
-    header: "Priority",
-    cell: (props: any) => {
-      const priority = props.row.original.task.priority;
-      return (
-        <span
-          style={{
-            background: priorityBackground[priority] ?? "#2a2a2a",
-            color: priorityColors[priority] ?? "#888",
-            padding: "2px 8px",
-            borderRadius: "20px",
-            fontSize: "11px",
-            fontWeight: 500,
-          }}
-        >
-          {priority}
-        </span>
-      );
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: (props: any) => {
+        const status = props.row.original.task.status;
+        const path = props.row.original.task.path;
+        return (
+          <select
+            value={status}
+            onChange={(e) => {
+              invoke("update_status", {
+                path: path,
+                status: e.target.value,
+              }).then(() => {
+                invoke("refresh_tasks").then(() => {
+                  onRefresh();
+                });
+              });
+            }}
+            style={{
+              background: statusBackground[status] ?? "#2a2a2a",
+              color: statusColors[status] ?? "#888",
+              padding: "2px 8px",
+              borderRadius: "20px",
+              fontSize: "11px",
+              fontWeight: 500,
+            }}
+          >
+            <option value="open">open</option>
+            <option value="blocked">blocked</option>
+            <option value="closed">closed</option>
+            {status}
+          </select>
+        );
+      },
     },
-  },
-];
-
-export const TaskTable = ({ data, onDoubleClick }: any) => {
+    {
+      accessorKey: "priority",
+      header: "Priority",
+      cell: (props: any) => {
+        const priority = props.row.original.task.priority;
+        return (
+          <span
+            style={{
+              background: priorityBackground[priority] ?? "#2a2a2a",
+              color: priorityColors[priority] ?? "#888",
+              padding: "2px 8px",
+              borderRadius: "20px",
+              fontSize: "11px",
+              fontWeight: 500,
+            }}
+          >
+            {priority}
+          </span>
+        );
+      },
+    },
+  ];
   const [expanded, setExpanded] = useState(true);
   const table = useReactTable({
     data,
