@@ -96,6 +96,11 @@ export const TaskTable = ({ data, onDoubleClick, onRefresh }: any) => {
         );
       },
     },
+    {
+      accessorKey: "due",
+      header: "Due",
+      cell: (props: any) => <p>{props.row.original.task.due}</p>,
+    },
   ];
   const [expanded, setExpanded] = useState(true);
   const table = useReactTable({

@@ -44,6 +44,11 @@ fn refresh_tasks(state: State<AppState>) {
 }
 
 #[tauri::command]
+fn save_task_body(path: String, content: String) {
+    std::fs::write(&path, content).unwrap();
+}
+
+#[tauri::command]
 fn update_status(path: String, status: String) {
     let content = std::fs::read_to_string(&path).unwrap();
     let first = content.strip_prefix("---\n").unwrap();
@@ -66,6 +71,37 @@ fn update_status(path: String, status: String) {
 
     let header = lines.join("\n");
     std::fs::write(&path, header).unwrap();
+}
+
+#[tauri::command]
+fn create_task(folder_path: String) {
+    let id = chrono::Local::now().format("%Y%m%d%H%M%S").to_string();
+
+    let content = format!(
+        "---
+id: {}
+title: New task
+tasktype: task
+status: open
+priority: low
+created: null
+due: null
+ended: null
+depends_on: []
+tags: []
+general_status: \"\"
+blocker: \"\"
+risk: \"\"
+ask: \"\"
+outcome: \"\"
+---
+## Notes
+",
+        id
+    );
+
+    let file_path = format!("{}/{}.md", folder_path, id);
+    std::fs::write(&file_path, content).unwrap();
 }
 
 // #[tauri::command]
@@ -93,6 +129,8 @@ pub fn run() {
             get_task_body,
             update_status,
             refresh_tasks,
+            save_task_body,
+            create_task,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

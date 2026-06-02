@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect } from "react";
+import { useRef } from "react";
 
 import { TaskTable } from "./TaskTable";
 import { TaskNode } from "./types";
@@ -20,6 +21,29 @@ function App() {
     });
   }
 
+  const debounceTimer = useRef<any>(null);
+
+  function handleContentChange(content: string) {
+    setFileContent(content);
+
+    // clear existing timer
+    if (debounceTimer.current) {
+      clearTimeout(debounceTimer.current);
+    }
+
+    // set new timer
+    debounceTimer.current = setTimeout(() => {
+      invoke("save_task_body", {
+        path: selectedTask?.task.path,
+        content: content,
+      }).then(() =>
+        invoke("refresh_tasks").then(() => {
+          fetchTasks();
+        }),
+      );
+    }, 800);
+  }
+
   function handleDoubleClick(task: TaskNode) {
     setSelectedTask(task);
     invoke("get_task_body", { path: task.task.path }).then((content) => {
@@ -29,6 +53,22 @@ function App() {
 
   return (
     <div style={{ display: "flex", height: "100vh" }}>
+      <div className="menu">
+        <button
+          onClick={() => {
+            invoke("create_task", {
+              folderPath: "/Users/mkomitsky/All My Stuff/Project_Scheduler/",
+            }).then(() => {
+              invoke("refresh_tasks").then(() => {
+                fetchTasks();
+              });
+            });
+          }}
+        >
+          + New Task
+        </button>
+      </div>
+
       <div style={{ width: "45%", borderRight: "1px solid #333" }}>
         <TaskTable
           data={tasks}
@@ -51,7 +91,7 @@ function App() {
               fontFamily: "monospace",
             }}
             value={fileContent}
-            onChange={(e) => setFileContent(e.target.value)}
+            onChange={(e) => handleContentChange(e.target.value)}
           />
         ) : (
           <p style={{ color: "#666", padding: "20px" }}>
