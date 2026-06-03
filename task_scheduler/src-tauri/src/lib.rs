@@ -35,6 +35,12 @@ fn get_tree(state: State<AppState>) -> Vec<TaskNode> {
 #[tauri::command]
 fn get_task_body(path: String) -> String {
     std::fs::read_to_string(&path).unwrap()
+
+    //let file_content = std::fs::read_to_string(&path).unwrap();
+    // let first = file_content.strip_prefix("---\n").unwrap();
+    // let end = first.find("\n---").unwrap();
+    // let yaml_block = &first[end..];
+    // serde_yaml::from_str(yaml_block).unwrap()
 }
 
 #[tauri::command]

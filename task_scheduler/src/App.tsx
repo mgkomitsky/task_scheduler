@@ -69,7 +69,7 @@ function App() {
         </button>
       </div>
 
-      <div style={{ display: "flex", height: "100vh" }}>
+      <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
         <div style={{ width: "45%", borderRight: "1px solid #333" }}>
           <TaskTable
             data={tasks}
@@ -78,27 +78,43 @@ function App() {
           />
         </div>
 
-        <div style={{ flex: 1 }}>
-          {selectedTask ? (
-            <textarea
-              style={{
-                width: "100%",
-                height: "100%",
-                background: "#1e1e1e",
-                color: "#d4d4d4",
-                border: "none",
-                padding: "16px",
-                fontSize: "13px",
-                fontFamily: "monospace",
-              }}
-              value={fileContent}
-              onChange={(e) => handleContentChange(e.target.value)}
-            />
-          ) : (
-            <p style={{ color: "#666", padding: "20px" }}>
-              Double click a task to edit
-            </p>
-          )}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            height: "100%",
+            width: "100%",
+          }}
+        >
+          <div>
+            <input type="text" style={{ height: "20px", resize: "none" }} />
+          </div>
+
+          <div>
+            <input type="text" style={{ height: "20px", resize: "none" }} />
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+            {selectedTask ? (
+              <textarea
+                style={{
+                  flex: 1,
+                  background: "#1e1e1e",
+                  color: "#d4d4d4",
+                  border: "none",
+                  padding: "16px",
+                  fontSize: "13px",
+                  fontFamily: "monospace",
+                }}
+                value={fileContent}
+                onChange={(e) => handleContentChange(e.target.value)}
+              />
+            ) : (
+              <p style={{ color: "#666", padding: "20px" }}>
+                Double click a task to edit
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
