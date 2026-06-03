@@ -88,11 +88,6 @@ created: null
 due: null
 ended: null
 depends_on: []
-tags: []
-general_status: \"\"
-blocker: \"\"
-risk: \"\"
-ask: \"\"
 outcome: \"\"
 ---
 ## Notes

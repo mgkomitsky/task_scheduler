@@ -15,11 +15,6 @@ pub struct Task {
     due: Option<String>,
     ended: Option<String>,
     depends_on: Vec<String>,
-    tags: Vec<String>,
-    general_status: String,
-    blocker: String,
-    risk: String,
-    ask: String,
     outcome: String,
     #[serde(skip_deserializing, default)]
     path: String,
@@ -80,7 +75,7 @@ pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
     roots
 }
 
-pub fn parse_item(file_content: &str) -> Task {
+pub fn parse_single_md_file(file_content: &str) -> Task {
     let first = file_content.strip_prefix("---\n").unwrap();
     let end = first.find("\n---").unwrap();
     let yaml_block = &first[..end];
@@ -100,7 +95,7 @@ pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
         }
 
         let file_content = std::fs::read_to_string(&path).unwrap();
-        let mut task = parse_item(&file_content);
+        let mut task = parse_single_md_file(&file_content);
         task.path = path.to_str().unwrap().to_string();
         tasks.push(task);
     }

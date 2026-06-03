@@ -131,7 +131,7 @@ export const TaskTable = ({ data, onDoubleClick, onRefresh }: any) => {
           <div
             className="tr"
             key={row.id}
-            style={{ paddingLeft: `${row.depth * 20}px` }}
+            style={{ paddingLeft: `${Math.min(row.depth, 1) * 20}px` }}
             onDoubleClick={() => onDoubleClick(row.original)}
           >
             {row.getVisibleCells().map((cell) => (
