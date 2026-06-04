@@ -23,7 +23,7 @@ function App() {
 
   const debounceTimer = useRef<any>(null);
 
-  function handleContentChange(content: string) {
+  function handleTextAreaChange(content: string) {
     setFileContent(content);
 
     // clear existing timer
@@ -107,7 +107,7 @@ function App() {
                   fontFamily: "monospace",
                 }}
                 value={fileContent}
-                onChange={(e) => handleContentChange(e.target.value)}
+                onChange={(e) => handleTextAreaChange(e.target.value)}
               />
             ) : (
               <p style={{ color: "#666", padding: "20px" }}>

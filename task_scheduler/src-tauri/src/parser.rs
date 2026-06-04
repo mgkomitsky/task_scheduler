@@ -21,12 +21,12 @@ pub struct Task {
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
-pub struct TaskNode {
+pub struct TaskParent {
     pub task: Task,
-    pub sub_rows: Vec<TaskNode>,
+    pub sub_rows: Vec<TaskParent>,
 }
 
-fn build_node(id: &str, map: &HashMap<String, TaskNode>) -> TaskNode {
+fn build_node(id: &str, map: &HashMap<String, TaskParent>) -> TaskParent {
     let node = map.get(id).unwrap().clone();
     let sub_rows = node
         .task
@@ -41,18 +41,19 @@ fn build_node(id: &str, map: &HashMap<String, TaskNode>) -> TaskNode {
             }
         })
         .collect();
-    TaskNode {
+    TaskParent {
         task: node.task,
         sub_rows,
     }
 }
-pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
-    let map: HashMap<String, TaskNode> = tasks
+
+pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskParent> {
+    let map: HashMap<String, TaskParent> = tasks
         .into_iter()
         .map(|t| {
             (
                 t.id.clone(),
-                TaskNode {
+                TaskParent {
                     task: t,
                     sub_rows: vec![],
                 },
@@ -65,7 +66,7 @@ pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
         .flat_map(|node| node.task.depends_on.iter().cloned())
         .collect();
 
-    let mut roots: Vec<TaskNode> = map
+    let mut roots: Vec<TaskParent> = map
         .keys()
         .filter(|id| !nested_ids.contains(*id))
         .map(|id| build_node(id, &map))
@@ -75,11 +76,20 @@ pub fn build_tree(tasks: Vec<Task>) -> Vec<TaskNode> {
     roots
 }
 
-pub fn parse_single_md_file(file_content: &str) -> Task {
-    let first = file_content.strip_prefix("---\n").unwrap();
-    let end = first.find("\n---").unwrap();
+pub fn parse_single_md_file(file_content: &str) -> Result<Task, String> {
+    let first = match file_content.strip_prefix("---\n") {
+        Some(f) => f,
+        None => return Err("File does not start with ---".to_string()),
+    };
+    let end = match first.find("\n---") {
+        Some(f) => f,
+        None => return Err("File does not end with ---".to_string()),
+    };
     let yaml_block = &first[..end];
-    serde_yaml::from_str(yaml_block).unwrap()
+    match serde_yaml::from_str(yaml_block) {
+        Ok(task) => Ok(task),
+        Err(e) => Err(e.to_string()),
+    }
 }
 
 pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
@@ -95,10 +105,21 @@ pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
         }
 
         let file_content = std::fs::read_to_string(&path).unwrap();
-        let mut task = parse_single_md_file(&file_content);
-        task.path = path.to_str().unwrap().to_string();
-        tasks.push(task);
+        match parse_single_md_file(&file_content) {
+            Ok(mut task) => {
+                task.path = match path.to_str() {
+                    Some(p) => p.to_string(),
+                    None => {
+                        println!("Skipping {:?}: invalid path", path);
+                        continue;
+                    }
+                };
+                tasks.push(task);
+            }
+            Err(e) => {
+                println!("Skipping {:?}: {}", path, e);
+            }
+        }
     }
-
     tasks
 }

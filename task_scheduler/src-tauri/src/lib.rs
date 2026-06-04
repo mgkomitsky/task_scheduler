@@ -1,7 +1,7 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 mod parser;
-use crate::parser::{build_tree, parse_all_items, Task, TaskNode};
+use crate::parser::{build_tree, parse_all_items, Task, TaskParent};
 use std::sync::Mutex;
 use tauri::State;
 
@@ -27,7 +27,7 @@ fn get_tasks(state: State<AppState>) -> Vec<Task> {
 }
 
 #[tauri::command]
-fn get_tree(state: State<AppState>) -> Vec<TaskNode> {
+fn get_tree(state: State<AppState>) -> Vec<TaskParent> {
     let tasks = state.tasks.lock().unwrap().clone();
     build_tree(tasks)
 }
@@ -55,28 +55,31 @@ fn save_task_body(path: String, content: String) {
 }
 
 #[tauri::command]
-fn update_status(path: String, status: String) {
-    let content = std::fs::read_to_string(&path).unwrap();
-    let first = content.strip_prefix("---\n").unwrap();
-    let end = first.find("\n---").unwrap();
-    let yaml_block = &first[..end];
-
-    // for line in content.lines() {
-    //     println!("{}", line);
-    // }
-
-    let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
-    let index = lines
-        .iter()
-        .position(|line| line.contains("status:"))
-        .unwrap();
-    lines[index] = format!("status: {}", status);
-
-    // println!("{:?}", index);
-    // println!("{}", lines[4]);
-
-    let header = lines.join("\n");
-    std::fs::write(&path, header).unwrap();
+fn update_status(path: String, status: String) -> Result<(), String> {
+    match std::fs::read_to_string(&path) {
+        Ok(content) => match content.strip_prefix("---\n") {
+            Some(first) => match first.find("\n---") {
+                Some(end) => {
+                    let yaml_block = &first[..end];
+                    let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+                    match lines.iter().position(|line| line.contains("status:")) {
+                        Some(index) => {
+                            lines[index] = format!("status: {}", status);
+                            let header = lines.join("\n");
+                            match std::fs::write(&path, header) {
+                                Ok(_) => Ok(()),
+                                Err(_) => Err("Error".to_string()),
+                            }
+                        }
+                        None => Err("Error".to_string()),
+                    }
+                }
+                None => Err("Error".to_string()),
+            },
+            None => Err("Error".to_string()),
+        },
+        Err(..) => Err("Error".to_string()),
+    }
 }
 
 #[tauri::command]
