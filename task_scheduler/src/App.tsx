@@ -21,6 +21,13 @@ function App() {
     });
   }
 
+  function handleDelete(task: TaskNode) {
+    console.log("DELETE");
+    invoke("delete_task", { path: task.task.path }).then(() => {
+      invoke("refresh_tasks").then(() => fetchTasks());
+    });
+  }
+
   const debounceTimer = useRef<any>(null);
 
   function handleTextAreaChange(content: string) {
@@ -46,6 +53,7 @@ function App() {
 
   function handleDoubleClick(task: TaskNode) {
     setSelectedTask(task);
+    console.log(task);
     invoke("get_task_body", { path: task.task.path }).then((content) => {
       setFileContent(content as string);
     });
@@ -75,6 +83,7 @@ function App() {
             data={tasks}
             onDoubleClick={handleDoubleClick}
             onRefresh={fetchTasks}
+            onDelete={handleDelete}
           />
         </div>
 

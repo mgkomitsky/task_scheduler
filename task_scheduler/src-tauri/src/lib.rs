@@ -34,6 +34,7 @@ fn get_tree(state: State<AppState>) -> Vec<TaskParent> {
 
 #[tauri::command]
 fn get_task_body(path: String) -> String {
+    println!("{}", &path.to_string());
     std::fs::read_to_string(&path).unwrap()
 
     //let file_content = std::fs::read_to_string(&path).unwrap();
@@ -55,30 +56,68 @@ fn save_task_body(path: String, content: String) {
 }
 
 #[tauri::command]
+fn delete_task(path: String) {
+    std::fs::remove_file(&path);
+}
+
+// #[tauri::command]
+// fn update_status(path: String, status: String) -> Result<(), String> {
+//     match std::fs::read_to_string(&path) {
+//         Ok(content) => match content.strip_prefix("---\n") {
+//             Some(first) => match first.find("\n---") {
+//                 Some(end) => {
+//                     let yaml_block = &first[..end];
+//                     let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+//                     match lines.iter().position(|line| line.contains("status:")) {
+//                         Some(index) => {
+//                             lines[index] = format!("status: {}", status);
+//                             let header = lines.join("\n");
+//                             match std::fs::write(&path, header) {
+//                                 Ok(_) => Ok(()),
+//                                 Err(_) => Err("Error".to_string()),
+//                             }
+//                         }
+//                         None => Err("Error".to_string()),
+//                     }
+//                 }
+//                 None => Err("Error".to_string()),
+//             },
+//             None => Err("Error".to_string()),
+//         },
+//         Err(..) => Err("Error".to_string()),
+//     }
+// }
+
+#[tauri::command]
 fn update_status(path: String, status: String) -> Result<(), String> {
-    match std::fs::read_to_string(&path) {
-        Ok(content) => match content.strip_prefix("---\n") {
-            Some(first) => match first.find("\n---") {
-                Some(end) => {
-                    let yaml_block = &first[..end];
-                    let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
-                    match lines.iter().position(|line| line.contains("status:")) {
-                        Some(index) => {
-                            lines[index] = format!("status: {}", status);
-                            let header = lines.join("\n");
-                            match std::fs::write(&path, header) {
-                                Ok(_) => Ok(()),
-                                Err(_) => Err("Error".to_string()),
-                            }
-                        }
-                        None => Err("Error".to_string()),
-                    }
-                }
-                None => Err("Error".to_string()),
-            },
-            None => Err("Error".to_string()),
-        },
-        Err(..) => Err("Error".to_string()),
+    let content = match std::fs::read_to_string(&path) {
+        Ok(c) => c,
+        Err(_) => "Error".to_string(),
+    };
+
+    let first = match content.strip_prefix("---\n") {
+        Some(f) => f,
+        None => "Error",
+    };
+
+    let end = match first.find("\n---") {
+        Some(e) => e,
+        None => 1,
+    };
+
+    let yaml_block = &first[..end];
+    let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+
+    let index = match lines.iter().position(|line| line.contains("status:")) {
+        Some(i) => i,
+        None => 1,
+    };
+
+    lines[index] = format!("status: {}", status);
+    let header = lines.join("\n");
+    match std::fs::write(&path, header) {
+        Ok(_) => Ok(()),
+        Err(_) => Err("Error".to_string()),
     }
 }
 
@@ -135,6 +174,7 @@ pub fn run() {
             refresh_tasks,
             save_task_body,
             create_task,
+            delete_task,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

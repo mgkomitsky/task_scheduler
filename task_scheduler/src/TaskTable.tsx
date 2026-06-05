@@ -32,8 +32,29 @@ const priorityBackground: Record<string, string> = {
   high: "#1a3d2a",
 };
 
-export const TaskTable = ({ data, onDoubleClick, onRefresh }: any) => {
+export const TaskTable = ({
+  data,
+  onDoubleClick,
+  onRefresh,
+  onDelete,
+}: any) => {
   const columns = [
+    {
+      header: " ",
+      cell: ({ row }) => {
+        return (
+          <button
+            onClick={(e) => {
+              e.currentTarget.disabled = true;
+              e.stopPropagation();
+              onDelete(row.original);
+            }}
+          >
+            x
+          </button>
+        );
+      },
+    },
     {
       accessorKey: "title",
       header: "Title",
