@@ -63,6 +63,16 @@ function App() {
     <div>
       <div className="menu">
         <button
+          style={{
+            background: "#4b81ff",
+            color: "#ffffffa1",
+            border: "none",
+            fontSize: "16px",
+            fontWeight: "700",
+            borderRadius: "5px 5px",
+            width: "100px",
+            height: "30px",
+          }}
           onClick={() => {
             invoke("create_task", {
               folderPath: "/Users/mkomitsky/All My Stuff/Project_Scheduler/",
@@ -73,12 +83,12 @@ function App() {
             });
           }}
         >
-          + New Task
+          New Task
         </button>
       </div>
 
       <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
-        <div style={{ width: "45%", borderRight: "1px solid #333" }}>
+        <div style={{ width: "75%", borderRight: "1px solid #333" }}>
           <TaskTable
             data={tasks}
             onDoubleClick={handleDoubleClick}
@@ -95,13 +105,13 @@ function App() {
             width: "100%",
           }}
         >
-          <div>
+          {/* <div>
             <input type="text" style={{ height: "20px", resize: "none" }} />
           </div>
 
           <div>
             <input type="text" style={{ height: "20px", resize: "none" }} />
-          </div>
+          </div> */}
 
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             {selectedTask ? (

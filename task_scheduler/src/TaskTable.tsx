@@ -45,13 +45,13 @@ export const TaskTable = ({
         return (
           <button
             style={{
-              background: "#fd3232",
-              color: "#ffffff",
-              padding: "5px 5px",
+              background: "#fd32324a",
+              color: "#ffffff4a",
+              padding: "0px 0px",
               height: "20px",
               width: "20px",
               borderRadius: "50%",
-              fontSize: "11px",
+              fontSize: "15px",
               fontWeight: 500,
               border: "none",
               display: "flex",
@@ -64,7 +64,24 @@ export const TaskTable = ({
               onDelete(row.original);
             }}
           >
-            x
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <line
+                x1="1"
+                y1="1"
+                x2="9"
+                y2="9"
+                stroke="white"
+                strokeWidth="1"
+              />
+              <line
+                x1="9"
+                y1="1"
+                x2="1"
+                y2="9"
+                stroke="white"
+                strokeWidth="1"
+              />
+            </svg>
           </button>
         );
       },
@@ -84,9 +101,10 @@ export const TaskTable = ({
           <select
             value={status}
             onChange={(e) => {
-              invoke("update_status", {
+              invoke("update_field", {
                 path: path,
-                status: e.target.value,
+                data: e.target.value,
+                field: "status:",
               }).then(() => {
                 invoke("refresh_tasks").then(() => {
                   onRefresh();
@@ -114,9 +132,22 @@ export const TaskTable = ({
       accessorKey: "priority",
       header: "Priority",
       cell: (props: any) => {
+        const path = props.row.original.task.path;
         const priority = props.row.original.task.priority;
         return (
-          <span
+          <select
+            value={priority}
+            onChange={(e) => {
+              invoke("update_field", {
+                path: path,
+                data: e.target.value,
+                field: "priority:",
+              }).then(() => {
+                invoke("refresh_tasks").then(() => {
+                  onRefresh();
+                });
+              });
+            }}
             style={{
               background: priorityBackground[priority] ?? "#2a2a2a",
               color: priorityColors[priority] ?? "#888",
@@ -126,8 +157,11 @@ export const TaskTable = ({
               fontWeight: 500,
             }}
           >
+            <option value="low">low</option>
+            <option value="med">med</option>
+            <option value="high">high</option>
             {priority}
-          </span>
+          </select>
         );
       },
     },
