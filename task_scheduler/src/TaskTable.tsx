@@ -44,6 +44,20 @@ export const TaskTable = ({
       cell: ({ row }) => {
         return (
           <button
+            style={{
+              background: "#fd3232",
+              color: "#ffffff",
+              padding: "5px 5px",
+              height: "20px",
+              width: "20px",
+              borderRadius: "50%",
+              fontSize: "11px",
+              fontWeight: 500,
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
             onClick={(e) => {
               e.currentTarget.disabled = true;
               e.stopPropagation();
