@@ -70,6 +70,7 @@ function DueDateCell({ path, value, onRefresh }: any) {
   useEffect(() => {
     if (open && divRef.current && !calendarRef.current) {
       calendarRef.current = new Calendar(divRef.current, {
+        selectedDates: value ? [value] : [],
         onClickDate(self) {
           const picked = self.context?.selectedDates[0];
           invoke("update_field", {
@@ -89,7 +90,7 @@ function DueDateCell({ path, value, onRefresh }: any) {
     <div>
       <button
         style={{
-          background: "#006c10",
+          background: "#00733b",
           color: "#ffffff",
           border: "none",
           fontSize: "12px",
