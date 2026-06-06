@@ -165,7 +165,7 @@ title: New task
 tasktype: task
 status: open
 priority: low
-created: null
+created: {}
 due: null
 ended: null
 depends_on: []
@@ -173,7 +173,7 @@ outcome: \"\"
 ---
 ## Notes
 ",
-        id
+        id, id
     );
 
     let file_path = format!("{}/{}.md", folder_path, id);

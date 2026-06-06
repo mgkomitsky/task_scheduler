@@ -123,6 +123,8 @@ export const TaskTable = ({
             <option value="open">open</option>
             <option value="blocked">blocked</option>
             <option value="closed">closed</option>
+            <option value="WFC">WFC</option>
+
             {status}
           </select>
         );

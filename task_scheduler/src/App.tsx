@@ -64,14 +64,14 @@ function App() {
       <div className="menu">
         <button
           style={{
-            background: "#4b81ff",
+            background: "#0037438d",
             color: "#ffffffa1",
             border: "none",
             fontSize: "16px",
-            fontWeight: "700",
-            borderRadius: "5px 5px",
+            ///fontWeight: "700",
+            borderRadius: "10px 10px",
             width: "100px",
-            height: "30px",
+            height: "25px",
           }}
           onClick={() => {
             invoke("create_task", {
