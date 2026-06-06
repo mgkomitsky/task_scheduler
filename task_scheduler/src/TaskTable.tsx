@@ -4,9 +4,12 @@ import {
   useReactTable,
   getExpandedRowModel,
 } from "@tanstack/react-table";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import "./TaskTable.css";
 import { invoke } from "@tauri-apps/api/core";
+import { Calendar } from "vanilla-calendar-pro";
+import "vanilla-calendar-pro/styles/index.css";
+import { createPortal } from "react-dom";
 
 const statusColors: Record<string, string> = {
   open: "#ffd700",
@@ -31,6 +34,90 @@ const priorityBackground: Record<string, string> = {
   medium: "#3d1a1a",
   high: "#1a3d2a",
 };
+function DueDateCell({ path, value, onRefresh }: any) {
+  const divRef = useRef<HTMLDivElement>(null);
+  const calendarRef = useRef<any>(null);
+  const pathRef = useRef(path);
+  const onRefreshRef = useRef(onRefresh);
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+
+  useEffect(() => {
+    pathRef.current = path;
+    onRefreshRef.current = onRefresh;
+  }, [path, onRefresh]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (divRef.current && !divRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    setPos({
+      top: rect.bottom + window.scrollY,
+      left: rect.left + window.scrollX,
+    });
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (open && divRef.current && !calendarRef.current) {
+      calendarRef.current = new Calendar(divRef.current, {
+        onClickDate(self) {
+          const picked = self.context?.selectedDates[0];
+          invoke("update_field", {
+            path: pathRef.current,
+            data: picked,
+            field: "due:",
+          })
+            .then(() => invoke("refresh_tasks"))
+            .then(() => onRefreshRef.current());
+        },
+      });
+      calendarRef.current.init();
+    }
+  }, [open]);
+
+  return (
+    <div>
+      <button
+        style={{
+          background: "#006c10",
+          color: "#ffffff",
+          border: "none",
+          fontSize: "12px",
+          ///fontWeight: "700",
+          borderRadius: "10px 10px",
+          width: "100px",
+          height: "20px",
+        }}
+        onClick={handleOpen}
+      >
+        {value ?? "Pick Date"}
+      </button>
+      {createPortal(
+        <div
+          ref={divRef}
+          style={{
+            display: open ? "block" : "none",
+            position: "absolute",
+            top: pos.top,
+            left: pos.left,
+            zIndex: 9999,
+          }}
+        />,
+        document.body,
+      )}
+    </div>
+  );
+}
 
 export const TaskTable = ({
   data,
@@ -170,7 +257,15 @@ export const TaskTable = ({
     {
       accessorKey: "due",
       header: "Due",
-      cell: (props: any) => <p>{props.row.original.task.due}</p>,
+      cell: (props: any) => {
+        return (
+          <DueDateCell
+            path={props.row.original.task.path}
+            onRefresh={onRefresh}
+            value={props.row.original.task.due}
+          />
+        );
+      },
     },
   ];
   const [expanded, setExpanded] = useState(true);
@@ -184,7 +279,6 @@ export const TaskTable = ({
     getExpandedRowModel: getExpandedRowModel(),
   });
 
-  console.log(table.getHeaderGroups());
   return (
     <div>
       <div className="table">
