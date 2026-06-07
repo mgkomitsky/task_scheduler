@@ -71,7 +71,7 @@ function App() {
 
   return (
     <div>
-      <div className="menu">
+      <div className="menu" style={{ padding: "10px" }}>
         <button
           style={{
             background: "#0037438d",
@@ -101,7 +101,7 @@ function App() {
         <div style={{ width: "75%", borderRight: "1px solid #333" }}>
           <TaskTable
             data={tasks}
-            onDoubleClick={handleDoubleClick}
+            onSingleClick={handleDoubleClick}
             onRefresh={fetchTasks}
             onDelete={handleDelete}
             onClick={getRowID}

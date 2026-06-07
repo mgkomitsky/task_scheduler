@@ -144,7 +144,7 @@ function TitleCell({ title: initialTitle, path, onRefresh }: any) {
 
 export const TaskTable = ({
   data,
-  onDoubleClick,
+  onSingleClick,
   onRefresh,
   onDelete,
   onClick,
@@ -334,7 +334,7 @@ export const TaskTable = ({
 
               borderRadius: row.depth === 0 ? "20px" : "20px",
             }}
-            onDoubleClick={() => onDoubleClick(row.original)}
+            onClick={() => onSingleClick(row.original)}
             onContextMenu={(e) => onClick(e, row.original)}
           >
             {row.getVisibleCells().map((cell) => (

@@ -26,6 +26,10 @@ pub struct TaskParent {
     pub sub_rows: Vec<TaskParent>,
 }
 
+fn status_parse() {
+    //This function needs to take the current tree, and set the status to "blocked" if there are any open dependencies
+}
+
 fn build_node(id: &str, map: &HashMap<String, TaskParent>) -> TaskParent {
     let node = map.get(id).unwrap().clone();
     let sub_rows = node
