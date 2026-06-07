@@ -34,6 +34,7 @@ const priorityBackground: Record<string, string> = {
   medium: "#3d1a1a",
   high: "#1a3d2a",
 };
+
 function DueDateCell({ path, value, onRefresh }: any) {
   const divRef = useRef<HTMLDivElement>(null);
   const calendarRef = useRef<any>(null);
@@ -41,11 +42,6 @@ function DueDateCell({ path, value, onRefresh }: any) {
   const onRefreshRef = useRef(onRefresh);
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
-
-  useEffect(() => {
-    pathRef.current = path;
-    onRefreshRef.current = onRefresh;
-  }, [path, onRefresh]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -90,7 +86,7 @@ function DueDateCell({ path, value, onRefresh }: any) {
     <div>
       <button
         style={{
-          background: "#00733b",
+          background: "#00844b",
           color: "#ffffff",
           border: "none",
           fontSize: "12px",
