@@ -7,6 +7,11 @@ import { TaskTable } from "./TaskTable";
 import { TaskNode } from "./types";
 
 function App() {
+  const [contextMenu, setContextMenu] = useState({
+    position: { x: 0, y: 0 },
+    toggled: false,
+  });
+
   const [tasks, setTasks] = useState<TaskNode[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
@@ -59,6 +64,11 @@ function App() {
     });
   }
 
+  function getRowID(e, task: TaskNode) {
+    e.preventDefault();
+    console.log(task.task.id);
+  }
+
   return (
     <div>
       <div className="menu">
@@ -94,6 +104,7 @@ function App() {
             onDoubleClick={handleDoubleClick}
             onRefresh={fetchTasks}
             onDelete={handleDelete}
+            onClick={getRowID}
           />
         </div>
 
