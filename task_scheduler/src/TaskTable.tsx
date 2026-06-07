@@ -293,7 +293,14 @@ export const TaskTable = ({
           <div
             className="tr"
             key={row.id}
-            style={{ paddingLeft: `${Math.min(row.depth, 1) * 20}px` }}
+            style={{
+              paddingLeft: `${Math.min(row.depth, 1) * 0}px`,
+              marginTop: row.depth === 0 ? "15px" : "0px",
+              borderTop: row.depth === 0 ? "1px solid #ffffff1a" : "none",
+              //borderLeft: row.depth === 0 ? "1px solid #ffffff1a" : "none",
+              //borderRight: row.depth === 0 ? "1px solid #ffffff1a" : "none",
+              borderRadius: row.depth === 0 ? "0px" : "0px",
+            }}
             onDoubleClick={() => onDoubleClick(row.original)}
           >
             {row.getVisibleCells().map((cell) => (
