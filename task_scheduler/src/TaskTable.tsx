@@ -116,6 +116,32 @@ function DueDateCell({ path, value, onRefresh }: any) {
   );
 }
 
+function TitleCell({ title: initialTitle, path, onRefresh }: any) {
+  const [title, setTitle] = useState(initialTitle);
+
+  return (
+    <input
+      style={{
+        background: "#2a2a2a",
+        color: "#ffffff",
+        padding: "2px 8px",
+        borderRadius: "20px",
+        fontSize: "11px",
+        fontWeight: 500,
+        border: "none",
+      }}
+      type="text"
+      value={title}
+      onChange={(e) => setTitle(e.target.value)}
+      onBlur={() =>
+        invoke("update_field", { path, data: title, field: "title:" })
+          .then(() => invoke("refresh_tasks"))
+          .then(() => onRefresh())
+      }
+    />
+  );
+}
+
 export const TaskTable = ({
   data,
   onDoubleClick,
@@ -174,7 +200,14 @@ export const TaskTable = ({
     {
       accessorKey: "title",
       header: "Title",
-      cell: (props: any) => <p>{props.row.original.task.title}</p>,
+      //cell: (props: any) => <p>{props.row.original.task.title}</p>,
+      cell: (props: any) => (
+        <TitleCell
+          title={props.row.original.task.title}
+          path={props.row.original.task.path}
+          onRefresh={onRefresh}
+        />
+      ),
     },
     {
       accessorKey: "status",
