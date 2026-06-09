@@ -16,18 +16,61 @@ fn change_parent_select_mode(state: State<AppState>, path: String, id: String) {
     //println!("{}", *state.parent_select_mode.lock().unwrap());
     if *state.parent_select_mode.lock().unwrap() == false {
         *state.parent_select_mode.lock().unwrap() = true;
-        *state.parent.lock().unwrap() = path;
+        *state.parent.lock().unwrap() = id;
     }
 }
 
 #[tauri::command]
-fn change_parent(state: State<AppState>, path: String, id: String) {
-    if *state.parent_select_mode.lock().unwrap() == true {
-        println!("Path: {}", state.parent.lock().unwrap()); //This is not printing
-                                                            //println!("HIIII");
-                                                            //println!("{}", path);
+fn add_dependency(path: String, dependency: String) -> Result<(), String> {
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+
+    let frontmatter = content
+        .trim_start_matches("---\n")
+        .split("\n---")
+        .next()
+        .unwrap_or("");
+
+    let mut doc: serde_yaml::Value =
+        serde_yaml::from_str(frontmatter).map_err(|e| e.to_string())?;
+
+    if let Some(depends) = doc.get_mut("depends_on") {
+        if let Some(arr) = depends.as_sequence_mut() {
+            arr.push(serde_yaml::Value::String(dependency));
+        }
     }
+
+    let body = content
+        .split("\n---")
+        .skip(1)
+        .collect::<Vec<_>>()
+        .join("\n---");
+
+    let new_content = format!(
+        "---\n{}---{}",
+        serde_yaml::to_string(&doc).map_err(|e| e.to_string())?,
+        body
+    );
+
+    std::fs::write(&path, new_content).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+fn change_parent(state: State<AppState>, path: String, id: String) -> Result<(), String> {
+    if *state.parent_select_mode.lock().unwrap() == true {
+        let parent_path = state.parent.lock().unwrap().clone();
+        add_dependency(parent_path, id)?;
+        *state.parent_select_mode.lock().unwrap() = false;
+    }
+    Ok(())
+}
+
+// #[tauri::command]
+// fn change_parent(state: State<AppState>, path: String, id: String) {
+//     if *state.parent_select_mode.lock().unwrap() == true {
+//         println!("Path: {}", state.parent.lock().unwrap());
+//         println!("{}", path);
+//     }
+// }
 
 #[tauri::command]
 fn greet(name: &str) -> String {

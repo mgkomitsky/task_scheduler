@@ -61,7 +61,7 @@ function App() {
     if (parentSelectMode) {
       invoke("change_parent", {
         path: task.task.path,
-        id: task.task.path,
+        id: task.task.id,
       }).then(() => setParentSelectMode(false));
       return;
     }
