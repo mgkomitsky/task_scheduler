@@ -148,6 +148,8 @@ export const TaskTable = ({
   onRefresh,
   onDelete,
   onClick,
+  parentSelectMode,
+  onParentSelectMode,
 }: any) => {
   const columns = [
     {
@@ -197,7 +199,8 @@ export const TaskTable = ({
             </button>
             <button
               style={{
-                background: "#fdef324a",
+                background: parentSelectMode ? "#ffffff30" : "#fdef324a",
+                border: parentSelectMode ? "1px solid #ffffff60" : "none",
                 color: "#ffffff4a",
                 padding: "0px 0px",
                 height: "20px",
@@ -205,13 +208,16 @@ export const TaskTable = ({
                 borderRadius: "50%",
                 fontSize: "15px",
                 fontWeight: 500,
-                border: "none",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
               }}
               onClick={(e) => {
-                console.log("HI");
+                console.log(parentSelectMode);
+                onParentSelectMode(
+                  row.original.task.path,
+                  row.original.task.path,
+                );
                 e.stopPropagation();
                 invoke("change_parent_select_mode", {
                   path: row.original.task.path,

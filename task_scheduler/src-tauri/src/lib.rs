@@ -16,15 +16,16 @@ fn change_parent_select_mode(state: State<AppState>, path: String, id: String) {
     //println!("{}", *state.parent_select_mode.lock().unwrap());
     if *state.parent_select_mode.lock().unwrap() == false {
         *state.parent_select_mode.lock().unwrap() = true;
-        //println!("{}", *state.parent_select_mode.lock().unwrap());
+        *state.parent.lock().unwrap() = path;
     }
 }
 
 #[tauri::command]
 fn change_parent(state: State<AppState>, path: String, id: String) {
     if *state.parent_select_mode.lock().unwrap() == true {
-        println!("{}", *state.parent.lock().unwrap());
-        println!("{}", path);
+        println!("Path: {}", state.parent.lock().unwrap()); //This is not printing
+                                                            //println!("HIIII");
+                                                            //println!("{}", path);
     }
 }
 

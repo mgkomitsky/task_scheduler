@@ -15,6 +15,7 @@ function App() {
   const [tasks, setTasks] = useState<TaskNode[]>([]);
   const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
+  const [parentSelectMode, setParentSelectMode] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -57,11 +58,13 @@ function App() {
   }
 
   function handleSingleClick(task: TaskNode) {
-    invoke("change_parent", {
-      // This is still being trigged when I click only the button. How do I stop the propagation?
-      path: task.task.path,
-      id: task.task.path,
-    });
+    if (parentSelectMode) {
+      invoke("change_parent", {
+        path: task.task.path,
+        id: task.task.path,
+      }).then(() => setParentSelectMode(false));
+      return;
+    }
     setSelectedTask(task);
     //console.log(task);
     invoke("get_task_body", { path: task.task.path }).then((content) => {
@@ -110,6 +113,11 @@ function App() {
             onRefresh={fetchTasks}
             onDelete={handleDelete}
             onClick={getRowID}
+            parentSelectMode={parentSelectMode}
+            onParentSelectMode={(path, id) => {
+              setParentSelectMode(true);
+              invoke("change_parent_select_mode", { path, id });
+            }}
           />
         </div>
 
