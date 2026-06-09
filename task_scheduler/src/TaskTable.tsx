@@ -154,46 +154,72 @@ export const TaskTable = ({
       header: " ",
       cell: ({ row }) => {
         return (
-          <button
-            style={{
-              background: "#fd32324a",
-              color: "#ffffff4a",
-              padding: "0px 0px",
-              height: "20px",
-              width: "20px",
-              borderRadius: "50%",
-              fontSize: "15px",
-              fontWeight: 500,
-              border: "none",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onClick={(e) => {
-              e.currentTarget.disabled = true;
-              e.stopPropagation();
-              onDelete(row.original);
-            }}
-          >
-            <svg width="10" height="10" viewBox="0 0 10 10">
-              <line
-                x1="1"
-                y1="1"
-                x2="9"
-                y2="9"
-                stroke="white"
-                strokeWidth="1"
-              />
-              <line
-                x1="9"
-                y1="1"
-                x2="1"
-                y2="9"
-                stroke="white"
-                strokeWidth="1"
-              />
-            </svg>
-          </button>
+          <div style={{ display: "flex", flexDirection: "row" }}>
+            <button
+              style={{
+                background: "#fd32324a",
+                color: "#ffffff4a",
+                padding: "0px 0px",
+                height: "20px",
+                width: "20px",
+                borderRadius: "50%",
+                fontSize: "15px",
+                fontWeight: 500,
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onClick={(e) => {
+                e.currentTarget.disabled = true;
+                e.stopPropagation();
+                onDelete(row.original);
+              }}
+            >
+              <svg width="10" height="10" viewBox="0 0 10 10">
+                <line
+                  x1="1"
+                  y1="1"
+                  x2="9"
+                  y2="9"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+                <line
+                  x1="9"
+                  y1="1"
+                  x2="1"
+                  y2="9"
+                  stroke="white"
+                  strokeWidth="1"
+                />
+              </svg>
+            </button>
+            <button
+              style={{
+                background: "#fdef324a",
+                color: "#ffffff4a",
+                padding: "0px 0px",
+                height: "20px",
+                width: "20px",
+                borderRadius: "50%",
+                fontSize: "15px",
+                fontWeight: 500,
+                border: "none",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+              onClick={(e) => {
+                console.log("HI");
+                e.stopPropagation();
+                invoke("change_parent_select_mode", {
+                  path: row.original.task.path,
+                  id: row.original.task.path,
+                });
+              }}
+            ></button>
+          </div>
         );
       },
     },

@@ -7,6 +7,25 @@ use tauri::State;
 
 struct AppState {
     tasks: Mutex<Vec<Task>>,
+    parent_select_mode: Mutex<bool>,
+    parent: Mutex<std::string::String>,
+}
+
+#[tauri::command]
+fn change_parent_select_mode(state: State<AppState>, path: String, id: String) {
+    //println!("{}", *state.parent_select_mode.lock().unwrap());
+    if *state.parent_select_mode.lock().unwrap() == false {
+        *state.parent_select_mode.lock().unwrap() = true;
+        //println!("{}", *state.parent_select_mode.lock().unwrap());
+    }
+}
+
+#[tauri::command]
+fn change_parent(state: State<AppState>, path: String, id: String) {
+    if *state.parent_select_mode.lock().unwrap() == true {
+        println!("{}", *state.parent.lock().unwrap());
+        println!("{}", path);
+    }
 }
 
 #[tauri::command]
@@ -34,7 +53,7 @@ fn get_tree(state: State<AppState>) -> Vec<TaskParent> {
 
 #[tauri::command]
 fn get_task_body(path: String) -> String {
-    println!("{}", &path.to_string());
+    //println!("{}", &path.to_string());
     std::fs::read_to_string(&path).unwrap()
 
     //let file_content = std::fs::read_to_string(&path).unwrap();
@@ -192,6 +211,8 @@ pub fn run() {
 
     let app_state = AppState {
         tasks: Mutex::new(tasks),
+        parent_select_mode: false.into(),
+        parent: Mutex::new(String::new()),
     };
 
     tauri::Builder::default()
@@ -209,6 +230,8 @@ pub fn run() {
             create_task,
             delete_task,
             update_field,
+            change_parent_select_mode,
+            change_parent
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -56,9 +56,14 @@ function App() {
     }, 800);
   }
 
-  function handleDoubleClick(task: TaskNode) {
+  function handleSingleClick(task: TaskNode) {
+    invoke("change_parent", {
+      // This is still being trigged when I click only the button. How do I stop the propagation?
+      path: task.task.path,
+      id: task.task.path,
+    });
     setSelectedTask(task);
-    console.log(task);
+    //console.log(task);
     invoke("get_task_body", { path: task.task.path }).then((content) => {
       setFileContent(content as string);
     });
@@ -101,7 +106,7 @@ function App() {
         <div style={{ width: "75%", borderRight: "1px solid #333" }}>
           <TaskTable
             data={tasks}
-            onSingleClick={handleDoubleClick}
+            onSingleClick={handleSingleClick}
             onRefresh={fetchTasks}
             onDelete={handleDelete}
             onClick={getRowID}
