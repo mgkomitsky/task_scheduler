@@ -62,7 +62,10 @@ function App() {
       invoke("change_parent", {
         path: task.task.path,
         id: task.task.id,
-      }).then(() => setParentSelectMode(false));
+      })
+        .then(() => setParentSelectMode(false))
+        .then(() => invoke("refresh_tasks"))
+        .then(() => fetchTasks());
       return;
     }
     setSelectedTask(task);
