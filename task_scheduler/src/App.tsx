@@ -6,6 +6,26 @@ import { useRef } from "react";
 import { TaskTable } from "./TaskTable";
 import { TaskNode } from "./types";
 
+function isAncestor(
+  nodes: TaskNode[],
+  ancestorId: string,
+  descendantId: string,
+): boolean {
+  for (const node of nodes) {
+    if (node.task.id === ancestorId) {
+      // check if descendantId is anywhere in this node's subtree
+      return isInSubtree(node, descendantId);
+    }
+    if (isAncestor(node.sub_rows ?? [], ancestorId, descendantId)) return true;
+  }
+  return false;
+}
+
+function isInSubtree(node: TaskNode, targetId: string): boolean {
+  if (node.task.id === targetId) return true;
+  return (node.sub_rows ?? []).some((child) => isInSubtree(child, targetId));
+}
+
 function findParentOfTask(
   nodes: TaskNode[],
   targetId: string,
@@ -179,6 +199,12 @@ function App() {
 
   function handleSingleClick(task: TaskNode) {
     if (parentSelectMode) {
+      const parentTask = contextMenu.task;
+      if (parentTask && isAncestor(tasks, task.task.id, parentTask.task.id)) {
+        alert("Cannot link a task that is higher in the tree.");
+        setParentSelectMode(false);
+        return;
+      }
       invoke("change_parent", {
         path: task.task.path,
         id: task.task.id,
