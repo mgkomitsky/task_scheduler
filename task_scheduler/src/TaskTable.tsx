@@ -132,6 +132,7 @@ function TitleCell({ title: initialTitle, path, onRefresh }: any) {
       }}
       type="text"
       value={title}
+      onClick={(e) => e.stopPropagation()}
       onChange={(e) => setTitle(e.target.value)}
       onBlur={() =>
         invoke("update_field", { path, data: title, field: "title:" })
@@ -366,7 +367,10 @@ export const TaskTable = ({
 
               borderRadius: row.depth === 0 ? "20px" : "20px",
             }}
-            onClick={() => onSingleClick(row.original)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSingleClick(row.original);
+            }}
             onContextMenu={(e) => onClick(e, row.original)}
           >
             {row.getVisibleCells().map((cell) => (

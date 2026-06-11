@@ -59,7 +59,8 @@ function ContextMenu({
     >
       <button
         style={buttonStyle}
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           onLinkDependency(task);
           onClose();
         }}
@@ -68,7 +69,7 @@ function ContextMenu({
       </button>
       <button
         style={buttonStyle}
-        onClick={() => {
+        onClick={(e) => {
           onAddDependency(task);
           onClose();
         }}
@@ -160,8 +161,8 @@ function App() {
         .then(() => fetchTasks());
       return;
     }
+    setContextMenu({ ...contextMenu, toggled: false }); // close menu on normal click
     setSelectedTask(task);
-    //console.log(task);
     invoke("get_task_body", { path: task.task.path }).then((content) => {
       setFileContent(content as string);
     });
@@ -185,7 +186,15 @@ function App() {
         toggled={contextMenu.toggled}
         task={contextMenu.task}
         onClose={() => setContextMenu({ ...contextMenu, toggled: false })}
-        onLinkDependency={(task) => console.log("link", task)}
+        onLinkDependency={(task) => {
+          console.log("path:", task.task.path);
+          console.log("id:", task.task.id);
+          setParentSelectMode(true);
+          invoke("change_parent_select_mode", {
+            path: task.task.path,
+            id: task.task.id,
+          });
+        }}
         onAddDependency={(task) => console.log("add", task)}
         onRemoveDependency={(task) => console.log("remove", task)}
         onMoveDependency={(task) => console.log("move", task)}

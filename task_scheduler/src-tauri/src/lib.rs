@@ -14,9 +14,11 @@ struct AppState {
 #[tauri::command]
 fn change_parent_select_mode(state: State<AppState>, path: String, id: String) {
     //println!("{}", *state.parent_select_mode.lock().unwrap());
+    println!("path received: {}", path);
+    println!("id received: {}", id);
     if *state.parent_select_mode.lock().unwrap() == false {
         *state.parent_select_mode.lock().unwrap() = true;
-        *state.parent.lock().unwrap() = id;
+        *state.parent.lock().unwrap() = path;
     }
 }
 
@@ -54,10 +56,23 @@ fn add_dependency(path: String, dependency: String) -> Result<(), String> {
     std::fs::write(&path, new_content).map_err(|e| e.to_string())
 }
 
+// #[tauri::command]
+// fn change_parent(state: State<AppState>, path: String, id: String) -> Result<(), String> {
+//     if *state.parent_select_mode.lock().unwrap() == true {
+//         let parent_path = state.parent.lock().unwrap().clone();
+//         add_dependency(parent_path, id)?;
+//         *state.parent_select_mode.lock().unwrap() = false;
+//     }
+//     Ok(())
+// }
+
 #[tauri::command]
 fn change_parent(state: State<AppState>, path: String, id: String) -> Result<(), String> {
     if *state.parent_select_mode.lock().unwrap() == true {
         let parent_path = state.parent.lock().unwrap().clone();
+        println!("parent_path: {}", parent_path);
+        println!("child path: {}", path);
+        println!("child id: {}", id);
         add_dependency(parent_path, id)?;
         *state.parent_select_mode.lock().unwrap() = false;
     }
