@@ -361,9 +361,9 @@ export const TaskTable = ({
             className="tr"
             key={row.id}
             style={{
-              paddingLeft: `${Math.min(row.depth, 1) * 0}px`,
+              paddingLeft: `${Math.min(row.depth, 4) * 10}px`,
               marginTop: row.depth === 0 ? "15px" : "0px",
-              border: row.depth === 0 ? "1px solid #ffffff1a" : "none",
+              border: row.depth === 0 ? "3px solid #ffffff44" : "none",
 
               borderRadius: row.depth === 0 ? "20px" : "20px",
             }}

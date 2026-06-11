@@ -6,6 +6,20 @@ import { useRef } from "react";
 import { TaskTable } from "./TaskTable";
 import { TaskNode } from "./types";
 
+function findParentOfTask(
+  nodes: TaskNode[],
+  targetId: string,
+): TaskNode | null {
+  for (const node of nodes) {
+    if (node.task.depends_on?.includes(targetId)) {
+      return node;
+    }
+    const found = findParentOfTask(node.sub_rows ?? [], targetId);
+    if (found) return found;
+  }
+  return null;
+}
+
 function ContextMenu({
   x,
   y,
@@ -16,6 +30,8 @@ function ContextMenu({
   onAddDependency,
   onRemoveDependency,
   onMoveDependency,
+  handleClickOutside,
+  onDelete,
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -94,6 +110,15 @@ function ContextMenu({
       >
         Move dependency
       </button>
+      <button
+        style={buttonStyle}
+        onClick={() => {
+          onDelete(task);
+          onClose();
+        }}
+      >
+        Delete task
+      </button>
     </div>
   );
 }
@@ -109,6 +134,7 @@ function App() {
   const [selectedTask, setSelectedTask] = useState<TaskNode | null>(null);
   const [fileContent, setFileContent] = useState<string>("");
   const [parentSelectMode, setParentSelectMode] = useState(false);
+  const [moveSelectMode, setMoveSelectMode] = useState<TaskNode | null>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -121,10 +147,11 @@ function App() {
   }
 
   function handleDelete(task: TaskNode) {
-    console.log("DELETE");
-    invoke("delete_task", { path: task.task.path }).then(() => {
-      invoke("refresh_tasks").then(() => fetchTasks());
-    });
+    invoke("delete_task", { path: task.task.path, id: task.task.id }).then(
+      () => {
+        invoke("refresh_tasks").then(() => fetchTasks());
+      },
+    );
   }
 
   const debounceTimer = useRef<any>(null);
@@ -157,6 +184,29 @@ function App() {
         id: task.task.id,
       })
         .then(() => setParentSelectMode(false))
+        .then(() => invoke("refresh_tasks"))
+        .then(() => fetchTasks());
+      return;
+    }
+    if (moveSelectMode) {
+      const movingTask = moveSelectMode as any;
+      const currentParent = findParentOfTask(tasks, movingTask.task.id);
+      Promise.resolve()
+        .then(() =>
+          currentParent
+            ? invoke("remove_dependency", {
+                path: currentParent.task.path,
+                dependency: movingTask.task.id,
+              })
+            : null,
+        )
+        .then(() =>
+          invoke("add_dependency", {
+            path: task.task.path,
+            dependency: movingTask.task.id,
+          }),
+        )
+        .then(() => setMoveSelectMode(false))
         .then(() => invoke("refresh_tasks"))
         .then(() => fetchTasks());
       return;
@@ -195,9 +245,29 @@ function App() {
             id: task.task.id,
           });
         }}
-        onAddDependency={(task) => console.log("add", task)}
-        onRemoveDependency={(task) => console.log("remove", task)}
-        onMoveDependency={(task) => console.log("move", task)}
+        onAddDependency={(task) => {
+          invoke("create_and_link_dependency", {
+            folderPath: "/Users/mkomitsky/All My Stuff/Project_Scheduler/",
+            parentPath: task.task.path,
+          })
+            .then(() => invoke("refresh_tasks"))
+            .then(() => fetchTasks());
+        }}
+        onRemoveDependency={(task) => {
+          const parent = findParentOfTask(tasks, task.task.id);
+          if (parent) {
+            invoke("remove_dependency", {
+              path: parent.task.path,
+              dependency: task.task.id,
+            })
+              .then(() => invoke("refresh_tasks"))
+              .then(() => fetchTasks());
+          }
+        }}
+        onMoveDependency={(task) => {
+          setMoveSelectMode(task);
+        }}
+        onDelete={handleDelete}
       />
       <div className="menu" style={{ padding: "10px" }}>
         <button

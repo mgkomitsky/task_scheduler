@@ -4,20 +4,22 @@ use std::sync::Mutex;
 use std::collections::HashMap;
 use std::collections::HashSet;
 
+use crate::update_field;
+
 #[derive(Debug, Deserialize, Clone, Serialize)]
 pub struct Task {
-    id: String,
-    title: String,
-    tasktype: String,
-    status: String,
-    priority: String,
-    created: Option<String>,
-    due: Option<String>,
-    ended: Option<String>,
-    depends_on: Vec<String>,
-    outcome: String,
+    pub id: String,
+    pub title: String,
+    pub tasktype: String,
+    pub status: String,
+    pub priority: String,
+    pub created: Option<String>,
+    pub due: Option<String>,
+    pub ended: Option<String>,
+    pub depends_on: Vec<String>,
+    pub outcome: String,
     #[serde(skip_deserializing, default)]
-    path: String,
+    pub path: String,
 }
 
 #[derive(Debug, Deserialize, Clone, Serialize)]
@@ -26,8 +28,36 @@ pub struct TaskParent {
     pub sub_rows: Vec<TaskParent>,
 }
 
-fn status_parse() {
-    //This function needs to take the current tree, and set the status to "blocked" if there are any open dependencies
+fn status_parse(tasks: &mut Vec<Task>) {
+    let closed_ids: HashSet<String> = tasks
+        .iter()
+        .filter(|t| t.status == "closed")
+        .map(|t| t.id.clone())
+        .collect();
+
+    for task in tasks.iter_mut() {
+        if task.depends_on.is_empty() {
+            continue;
+        }
+
+        let is_blocked = task
+            .depends_on
+            .iter()
+            .any(|dep_id| !closed_ids.contains(dep_id));
+
+        if is_blocked && task.status != "blocked" {
+            task.status = "blocked".to_string();
+            update_field(
+                task.path.clone(),
+                "status:".to_string(),
+                "blocked".to_string(),
+            )
+            .unwrap();
+        } else if !is_blocked && task.status == "blocked" {
+            task.status = "open".to_string();
+            update_field(task.path.clone(), "status:".to_string(), "open".to_string()).unwrap();
+        }
+    }
 }
 
 fn build_node(id: &str, map: &HashMap<String, TaskParent>) -> TaskParent {
@@ -125,5 +155,6 @@ pub fn parse_all_items(folder_path: &str) -> Vec<Task> {
             }
         }
     }
+    status_parse(&mut tasks);
     tasks
 }

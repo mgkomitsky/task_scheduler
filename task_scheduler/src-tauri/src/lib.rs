@@ -23,6 +23,40 @@ fn change_parent_select_mode(state: State<AppState>, path: String, id: String) {
 }
 
 #[tauri::command]
+fn remove_dependency(path: String, dependency: String) -> Result<(), String> {
+    let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+
+    let frontmatter = content
+        .trim_start_matches("---\n")
+        .split("\n---")
+        .next()
+        .unwrap_or("");
+
+    let mut doc: serde_yaml::Value =
+        serde_yaml::from_str(frontmatter).map_err(|e| e.to_string())?;
+
+    if let Some(depends) = doc.get_mut("depends_on") {
+        if let Some(arr) = depends.as_sequence_mut() {
+            arr.retain(|v| v.as_str() != Some(&dependency));
+        }
+    }
+
+    let body = content
+        .split("\n---")
+        .skip(1)
+        .collect::<Vec<_>>()
+        .join("\n---");
+
+    let new_content = format!(
+        "---\n{}---{}",
+        serde_yaml::to_string(&doc).map_err(|e| e.to_string())?,
+        body
+    );
+
+    std::fs::write(&path, new_content).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn add_dependency(path: String, dependency: String) -> Result<(), String> {
     let content = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
 
@@ -37,6 +71,10 @@ fn add_dependency(path: String, dependency: String) -> Result<(), String> {
 
     if let Some(depends) = doc.get_mut("depends_on") {
         if let Some(arr) = depends.as_sequence_mut() {
+            // check if it already exists
+            if arr.iter().any(|v| v.as_str() == Some(&dependency)) {
+                return Err("Dependency already exists".to_string());
+            }
             arr.push(serde_yaml::Value::String(dependency));
         }
     }
@@ -126,38 +164,17 @@ fn save_task_body(path: String, content: String) {
 }
 
 #[tauri::command]
-fn delete_task(path: String) {
-    std::fs::remove_file(&path);
+fn delete_task(state: State<AppState>, path: String, id: String) -> Result<(), String> {
+    let tasks = state.tasks.lock().unwrap().clone();
+
+    for task in &tasks {
+        if task.depends_on.contains(&id) {
+            remove_dependency(task.path.clone(), id.clone())?;
+        }
+    }
+
+    std::fs::remove_file(&path).map_err(|e| e.to_string())
 }
-
-// #[tauri::command]
-// fn update_status(path: String, status: String) -> Result<(), String> {
-//     match std::fs::read_to_string(&path) {
-//         Ok(content) => match content.strip_prefix("---\n") {
-//             Some(first) => match first.find("\n---") {
-//                 Some(end) => {
-//                     let yaml_block = &first[..end];
-//                     let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
-//                     match lines.iter().position(|line| line.contains("status:")) {
-//                         Some(index) => {
-//                             lines[index] = format!("status: {}", status);
-//                             let header = lines.join("\n");
-//                             match std::fs::write(&path, header) {
-//                                 Ok(_) => Ok(()),
-//                                 Err(_) => Err("Error".to_string()),
-//                             }
-//                         }
-//                         None => Err("Error".to_string()),
-//                     }
-//                 }
-//                 None => Err("Error".to_string()),
-//             },
-//             None => Err("Error".to_string()),
-//         },
-//         Err(..) => Err("Error".to_string()),
-//     }
-// }
-
 #[tauri::command]
 fn update_field(path: String, field: String, data: String) -> Result<(), String> {
     let content = match std::fs::read_to_string(&path) {
@@ -225,7 +242,14 @@ fn update_status(path: String, status: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn create_task(folder_path: String) {
+fn create_and_link_dependency(folder_path: String, parent_path: String) -> Result<(), String> {
+    let id = create_task(folder_path);
+    add_dependency(parent_path, id)?;
+    Ok(())
+}
+
+#[tauri::command]
+fn create_task(folder_path: String) -> String {
     let id = chrono::Local::now().format("%Y%m%d%H%M%S").to_string();
 
     let content = format!(
@@ -248,6 +272,8 @@ outcome: \"\"
 
     let file_path = format!("{}/{}.md", folder_path, id);
     std::fs::write(&file_path, content).unwrap();
+
+    id
 }
 
 // #[tauri::command]
@@ -282,7 +308,10 @@ pub fn run() {
             delete_task,
             update_field,
             change_parent_select_mode,
-            change_parent
+            change_parent,
+            remove_dependency,
+            add_dependency,
+            create_and_link_dependency
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
