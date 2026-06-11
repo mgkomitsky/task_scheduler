@@ -6,10 +6,102 @@ import { useRef } from "react";
 import { TaskTable } from "./TaskTable";
 import { TaskNode } from "./types";
 
+function ContextMenu({
+  x,
+  y,
+  toggled,
+  task,
+  onClose,
+  onLinkDependency,
+  onAddDependency,
+  onRemoveDependency,
+  onMoveDependency,
+}) {
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  if (!toggled) return null;
+
+  const buttonStyle = {
+    background: "none",
+    border: "none",
+    color: "#ffffff",
+    padding: "6px 12px",
+    width: "100%",
+    textAlign: "left" as const,
+    fontSize: "12px",
+    cursor: "pointer",
+  };
+
+  return (
+    <div
+      ref={menuRef}
+      style={{
+        position: "fixed",
+        top: y,
+        left: x,
+        background: "#2a2a2a",
+        border: "1px solid #ffffff20",
+        borderRadius: "8px",
+        zIndex: 9999,
+        minWidth: "160px",
+        padding: "4px 0px",
+      }}
+    >
+      <button
+        style={buttonStyle}
+        onClick={() => {
+          onLinkDependency(task);
+          onClose();
+        }}
+      >
+        Link dependency
+      </button>
+      <button
+        style={buttonStyle}
+        onClick={() => {
+          onAddDependency(task);
+          onClose();
+        }}
+      >
+        Add new dependency
+      </button>
+      <button
+        style={buttonStyle}
+        onClick={() => {
+          onRemoveDependency(task);
+          onClose();
+        }}
+      >
+        Remove dependency
+      </button>
+      <button
+        style={buttonStyle}
+        onClick={() => {
+          onMoveDependency(task);
+          onClose();
+        }}
+      >
+        Move dependency
+      </button>
+    </div>
+  );
+}
+
 function App() {
   const [contextMenu, setContextMenu] = useState({
     position: { x: 0, y: 0 },
     toggled: false,
+    task: null as TaskNode | null,
   });
 
   const [tasks, setTasks] = useState<TaskNode[]>([]);
@@ -77,11 +169,27 @@ function App() {
 
   function getRowID(e, task: TaskNode) {
     e.preventDefault();
-    console.log(task.task.id);
+    console.log("context menu triggered", e.clientX, e.clientY);
+    setContextMenu({
+      position: { x: e.clientX, y: e.clientY },
+      toggled: true,
+      task,
+    });
   }
 
   return (
     <div>
+      <ContextMenu
+        x={contextMenu.position.x}
+        y={contextMenu.position.y}
+        toggled={contextMenu.toggled}
+        task={contextMenu.task}
+        onClose={() => setContextMenu({ ...contextMenu, toggled: false })}
+        onLinkDependency={(task) => console.log("link", task)}
+        onAddDependency={(task) => console.log("add", task)}
+        onRemoveDependency={(task) => console.log("remove", task)}
+        onMoveDependency={(task) => console.log("move", task)}
+      />
       <div className="menu" style={{ padding: "10px" }}>
         <button
           style={{

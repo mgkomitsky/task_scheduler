@@ -64,14 +64,6 @@ fn change_parent(state: State<AppState>, path: String, id: String) -> Result<(),
     Ok(())
 }
 
-// #[tauri::command]
-// fn change_parent(state: State<AppState>, path: String, id: String) {
-//     if *state.parent_select_mode.lock().unwrap() == true {
-//         println!("Path: {}", state.parent.lock().unwrap());
-//         println!("{}", path);
-//     }
-// }
-
 #[tauri::command]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
