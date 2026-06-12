@@ -61,7 +61,7 @@ function getDaysOpen(
     (endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
   );
 
-  if (diffDays === 0) return "today";
+  if (diffDays === 0) return "1 day";
   if (diffDays === 1) return "1 day";
   return `${diffDays} days`;
 }

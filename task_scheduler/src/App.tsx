@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useRef } from "react";
 
 import { TaskTable } from "./TaskTable";
-import { TaskNode } from "./types";
+import { TaskNode, Task } from "./types";
 
 function isAlreadyInTree(nodes: TaskNode[], targetId: string): boolean {
   for (const node of nodes) {
@@ -143,6 +143,8 @@ function App() {
   const [fileContent, setFileContent] = useState<string>("");
   const [parentSelectMode, setParentSelectMode] = useState(false);
   const [moveSelectMode, setMoveSelectMode] = useState<TaskNode | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<TaskNode[] | null>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -251,6 +253,14 @@ function App() {
     });
   }
 
+  const priorityOrder: Record<string, number> = { high: 0, med: 1, low: 2 };
+
+  const sortedTasks = [...tasks].sort(
+    (a, b) =>
+      (priorityOrder[a.task.priority] ?? 3) -
+      (priorityOrder[b.task.priority] ?? 3),
+  );
+
   return (
     <div>
       <ContextMenu
@@ -316,12 +326,44 @@ function App() {
         >
           New Task
         </button>
+        <input
+          type="text"
+          placeholder="Search tasks..."
+          value={searchQuery}
+          style={{
+            background: "#2a2a2a",
+            color: "#ffffff",
+            border: "none",
+            borderRadius: "10px",
+            padding: "4px 10px",
+            fontSize: "13px",
+            marginLeft: "10px",
+            width: "200px",
+          }}
+          onClick={(e) => e.stopPropagation()}
+          onChange={(e) => {
+            const q = e.target.value;
+            setSearchQuery(q);
+            if (q.trim() === "") {
+              setSearchResults(null);
+              return;
+            }
+            invoke("search_tasks", { query: q }).then((results) => {
+              // wrap results in TaskNode format
+              const nodes = (results as Task[]).map((t) => ({
+                task: t,
+                sub_rows: [],
+              }));
+              setSearchResults(nodes as TaskNode[]);
+            });
+          }}
+        />
       </div>
 
       <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>
         <div style={{ width: "75%", borderRight: "1px solid #333" }}>
           <TaskTable
-            data={tasks}
+            data={searchResults ?? sortedTasks}
             onSingleClick={handleSingleClick}
             onRefresh={fetchTasks}
             onDelete={handleDelete}

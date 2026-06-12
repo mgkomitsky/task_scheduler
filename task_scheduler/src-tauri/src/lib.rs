@@ -12,6 +12,23 @@ struct AppState {
 }
 
 #[tauri::command]
+fn search_tasks(state: State<AppState>, query: String) -> Vec<Task> {
+    let tasks = state.tasks.lock().unwrap().clone();
+    let query = query.to_lowercase();
+
+    tasks
+        .into_iter()
+        .filter(|t| {
+            t.title.to_lowercase().contains(&query)
+                || std::fs::read_to_string(&t.path)
+                    .unwrap_or_default()
+                    .to_lowercase()
+                    .contains(&query)
+        })
+        .collect()
+}
+
+#[tauri::command]
 fn change_parent_select_mode(state: State<AppState>, path: String, id: String) {
     //println!("{}", *state.parent_select_mode.lock().unwrap());
     println!("path received: {}", path);
@@ -374,7 +391,8 @@ pub fn run() {
             change_parent,
             remove_dependency,
             add_dependency,
-            create_and_link_dependency
+            create_and_link_dependency,
+            search_tasks
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
