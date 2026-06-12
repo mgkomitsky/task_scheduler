@@ -45,7 +45,11 @@ function DueDateCell({ path, value, onRefresh }: any) {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (divRef.current && !divRef.current.contains(e.target as Node)) {
+      const target = e.target as HTMLElement;
+      if (target.closest?.('[class*="vc"]')) {
+        return; // click inside calendar — ignore
+      }
+      if (divRef.current && !divRef.current.contains(target)) {
         setOpen(false);
       }
     };
@@ -80,8 +84,10 @@ function DueDateCell({ path, value, onRefresh }: any) {
       });
       calendarRef.current.init();
     }
+    if (!open) {
+      calendarRef.current = null;
+    }
   }, [open]);
-
   return (
     <div>
       <button
@@ -99,19 +105,26 @@ function DueDateCell({ path, value, onRefresh }: any) {
       >
         {value ?? "Pick Date"}
       </button>
-      {createPortal(
-        <div
-          ref={divRef}
-          style={{
-            display: open ? "block" : "none",
-            position: "absolute",
-            top: pos.top,
-            left: pos.left,
-            zIndex: 9999,
-          }}
-        />,
-        document.body,
-      )}
+      {open &&
+        createPortal(
+          <>
+            <div
+              onClick={() => setOpen(false)}
+              style={{ position: "fixed", inset: 0, zIndex: 9998 }}
+            />
+            <div
+              ref={divRef}
+              onClick={(e) => e.stopPropagation()} // ← stops bubbling to the row
+              style={{
+                position: "absolute",
+                top: pos.top,
+                left: pos.left,
+                zIndex: 9999,
+              }}
+            />
+          </>,
+          document.body,
+        )}
     </div>
   );
 }

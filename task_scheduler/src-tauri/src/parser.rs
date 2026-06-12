@@ -27,7 +27,6 @@ pub struct TaskParent {
     pub task: Task,
     pub sub_rows: Vec<TaskParent>,
 }
-
 fn status_parse(tasks: &mut Vec<Task>) {
     let closed_ids: HashSet<String> = tasks
         .iter()
@@ -37,6 +36,11 @@ fn status_parse(tasks: &mut Vec<Task>) {
 
     for task in tasks.iter_mut() {
         if task.depends_on.is_empty() {
+            // no dependencies — set to open if it was blocked
+            if task.status == "blocked" {
+                task.status = "open".to_string();
+                update_field(task.path.clone(), "status:".to_string(), "open".to_string()).unwrap();
+            }
             continue;
         }
 
@@ -59,7 +63,6 @@ fn status_parse(tasks: &mut Vec<Task>) {
         }
     }
 }
-
 fn build_node(id: &str, map: &HashMap<String, TaskParent>) -> TaskParent {
     let node = map.get(id).unwrap().clone();
     let sub_rows = node
