@@ -142,14 +142,16 @@ fn get_tree(state: State<AppState>) -> Vec<TaskParent> {
 
 #[tauri::command]
 fn get_task_body(path: String) -> String {
-    //println!("{}", &path.to_string());
-    std::fs::read_to_string(&path).unwrap()
+    let content = std::fs::read_to_string(&path).unwrap();
 
-    //let file_content = std::fs::read_to_string(&path).unwrap();
-    // let first = file_content.strip_prefix("---\n").unwrap();
-    // let end = first.find("\n---").unwrap();
-    // let yaml_block = &first[end..];
-    // serde_yaml::from_str(yaml_block).unwrap()
+    // strip frontmatter — find the closing --- and return everything after it
+    if let Some(stripped) = content.strip_prefix("---\n") {
+        if let Some(end) = stripped.find("\n---") {
+            return stripped[end + 4..].to_string(); // +4 to skip past \n---
+        }
+    }
+
+    content
 }
 
 #[tauri::command]
@@ -159,8 +161,21 @@ fn refresh_tasks(state: State<AppState>) {
 }
 
 #[tauri::command]
-fn save_task_body(path: String, content: String) {
-    std::fs::write(&path, content).unwrap();
+fn save_task_body(path: String, content: String) -> Result<(), String> {
+    let existing = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+
+    let frontmatter = if let Some(stripped) = existing.strip_prefix("---\n") {
+        if let Some(end) = stripped.find("\n---") {
+            format!("---\n{}\n---", &stripped[..end])
+        } else {
+            String::new()
+        }
+    } else {
+        String::new()
+    };
+
+    let new_content = format!("{}\n{}", frontmatter, content);
+    std::fs::write(&path, new_content).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
@@ -175,36 +190,84 @@ fn delete_task(state: State<AppState>, path: String, id: String) -> Result<(), S
 
     std::fs::remove_file(&path).map_err(|e| e.to_string())
 }
+// #[tauri::command]
+// fn update_field(path: String, field: String, data: String) -> Result<(), String> {
+//     let content = match std::fs::read_to_string(&path) {
+//         Ok(c) => c,
+//         Err(_) => "Error".to_string(),
+//     };
+
+//     let first = match content.strip_prefix("---\n") {
+//         Some(f) => f,
+//         None => "Error",
+//     };
+
+//     let end = match first.find("\n---") {
+//         Some(e) => e,
+//         None => 1,
+//     };
+
+//     let yaml_block = &first[..end];
+//     let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
+
+//     let index = match lines.iter().position(|line| line.contains(&field)) {
+//         Some(i) => i,
+//         None => 1,
+//     };
+
+//     lines[index] = format!("{} {}", field, data);
+//     let header = lines.join("\n");
+//     match std::fs::write(&path, header) {
+//         Ok(_) => Ok(()),
+//         Err(_) => Err("Error".to_string()),
+//     }
+// }
+
 #[tauri::command]
 fn update_field(path: String, field: String, data: String) -> Result<(), String> {
     let content = match std::fs::read_to_string(&path) {
         Ok(c) => c,
-        Err(_) => "Error".to_string(),
+        Err(_) => return Err("Error reading file".to_string()),
     };
 
     let first = match content.strip_prefix("---\n") {
         Some(f) => f,
-        None => "Error",
+        None => return Err("Error".to_string()),
     };
 
     let end = match first.find("\n---") {
         Some(e) => e,
-        None => 1,
+        None => return Err("Error".to_string()),
     };
 
-    let yaml_block = &first[..end];
     let mut lines: Vec<String> = content.lines().map(|l| l.to_string()).collect();
 
     let index = match lines.iter().position(|line| line.contains(&field)) {
         Some(i) => i,
-        None => 1,
+        None => return Err("Error".to_string()),
     };
 
     lines[index] = format!("{} {}", field, data);
+
+    // if closing a task, set ended to current timestamp
+    if field == "status:" && data == "closed" {
+        let ended = chrono::Local::now().format("%Y%m%d%H%M%S").to_string();
+        if let Some(ended_index) = lines.iter().position(|line| line.contains("ended:")) {
+            lines[ended_index] = format!("ended: {}", ended);
+        }
+    }
+
+    // if reopening a task, clear ended
+    if field == "status:" && data != "closed" {
+        if let Some(ended_index) = lines.iter().position(|line| line.contains("ended:")) {
+            lines[ended_index] = "ended: null".to_string();
+        }
+    }
+
     let header = lines.join("\n");
     match std::fs::write(&path, header) {
         Ok(_) => Ok(()),
-        Err(_) => Err("Error".to_string()),
+        Err(_) => Err("Error writing file".to_string()),
     }
 }
 

@@ -34,6 +34,49 @@ const priorityBackground: Record<string, string> = {
   medium: "#3d1a1a",
   high: "#1a3d2a",
 };
+function getDaysOpen(
+  created: string | null,
+  status: string,
+  ended: string | null,
+): string {
+  if (!created) return "—";
+
+  const parseTimestamp = (ts: string) => {
+    const year = ts.slice(0, 4);
+    const month = ts.slice(4, 6);
+    const day = ts.slice(6, 8);
+    const hour = ts.slice(8, 10);
+    const min = ts.slice(10, 12);
+    const sec = ts.slice(12, 14);
+    return new Date(`${year}-${month}-${day}T${hour}:${min}:${sec}`);
+  };
+
+  const createdDate = parseTimestamp(created);
+  const endDate =
+    status === "closed" && ended && ended !== "null"
+      ? parseTimestamp(ended)
+      : new Date();
+
+  const diffDays = Math.floor(
+    (endDate.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24),
+  );
+
+  if (diffDays === 0) return "today";
+  if (diffDays === 1) return "1 day";
+  return `${diffDays} days`;
+}
+
+function getDueDateColor(value: string | null): string {
+  if (!value) return "#00844b"; // default green
+
+  const due = new Date(value);
+  const now = new Date();
+  const diffDays = (due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+
+  if (diffDays < -1) return "#800000"; // overdue — red
+  if (diffDays <= 1) return "#8c7700"; // due soon — yellow
+  return "#00844b"; // plenty of time — green
+}
 
 function DueDateCell({ path, value, onRefresh }: any) {
   const divRef = useRef<HTMLDivElement>(null);
@@ -92,7 +135,7 @@ function DueDateCell({ path, value, onRefresh }: any) {
     <div>
       <button
         style={{
-          background: "#00844b",
+          background: getDueDateColor(value),
           color: "#ffffff",
           border: "none",
           fontSize: "12px",
@@ -341,6 +384,24 @@ export const TaskTable = ({
             onRefresh={onRefresh}
             value={props.row.original.task.due}
           />
+        );
+      },
+    },
+    {
+      accessorKey: "created",
+      header: "Open For",
+      cell: (props: any) => {
+        const { created, status, ended } = props.row.original.task;
+        return (
+          <span
+            style={{
+              color: "#d4d4d4",
+              fontSize: "11px",
+              padding: "2px 8px",
+            }}
+          >
+            {getDaysOpen(created, status, ended)}
+          </span>
         );
       },
     },
