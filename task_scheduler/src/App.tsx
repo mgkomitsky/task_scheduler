@@ -6,6 +6,8 @@ import { useRef } from "react";
 import { TaskTable } from "./TaskTable";
 import { TaskNode, Task } from "./types";
 
+import { open } from "@tauri-apps/plugin-dialog";
+
 function isAlreadyInTree(nodes: TaskNode[], targetId: string): boolean {
   for (const node of nodes) {
     if (node.task.id === targetId) return true;
@@ -145,6 +147,7 @@ function App() {
   const [moveSelectMode, setMoveSelectMode] = useState<TaskNode | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<TaskNode[] | null>(null);
+  const [folderPath, setFolderPath] = useState<string>("");
 
   useEffect(() => {
     fetchTasks();
@@ -280,7 +283,7 @@ function App() {
         }}
         onAddDependency={(task) => {
           invoke("create_and_link_dependency", {
-            folderPath: "/Users/mkomitsky/All My Stuff/Project_Scheduler/",
+            folderPath: { folderPath },
             parentPath: task.task.path,
           })
             .then(() => invoke("refresh_tasks"))
@@ -316,7 +319,7 @@ function App() {
           }}
           onClick={() => {
             invoke("create_task", {
-              folderPath: "/Users/mkomitsky/All My Stuff/Project_Scheduler/",
+              folderPath: { folderPath },
             }).then(() => {
               invoke("refresh_tasks").then(() => {
                 fetchTasks();
@@ -358,6 +361,32 @@ function App() {
             });
           }}
         />
+        <button
+          style={{
+            background: "#0037438d",
+            color: "#ffffffa1",
+            border: "none",
+            fontSize: "16px",
+            borderRadius: "10px 10px",
+            width: "120px",
+            height: "25px",
+            marginLeft: "10px",
+          }}
+          onClick={async () => {
+            const selected = await open({
+              directory: true,
+              multiple: false,
+            });
+            if (selected) {
+              setFolderPath(selected as string);
+              invoke("set_folder_path", { path: selected }).then(() => {
+                invoke("refresh_tasks").then(() => fetchTasks());
+              });
+            }
+          }}
+        >
+          Open Folder
+        </button>
       </div>
 
       <div style={{ display: "flex", height: "100vh", overflow: "hidden" }}>

@@ -9,6 +9,12 @@ struct AppState {
     tasks: Mutex<Vec<Task>>,
     parent_select_mode: Mutex<bool>,
     parent: Mutex<std::string::String>,
+    folder_path: Mutex<String>,
+}
+
+#[tauri::command]
+fn set_folder_path(state: State<AppState>, path: String) {
+    *state.folder_path.lock().unwrap() = path;
 }
 
 #[tauri::command]
@@ -173,7 +179,8 @@ fn get_task_body(path: String) -> String {
 
 #[tauri::command]
 fn refresh_tasks(state: State<AppState>) {
-    let tasks = parse_all_items("/Users/mkomitsky/All My Stuff/Project_Scheduler/");
+    let folder_path = state.folder_path.lock().unwrap().clone();
+    let tasks = parse_all_items(&folder_path);
     *state.tasks.lock().unwrap() = tasks;
 }
 
@@ -367,13 +374,15 @@ pub fn run() {
     let tasks = parse_all_items("/Users/mkomitsky/All My Stuff/Project_Scheduler/");
 
     let app_state = AppState {
-        tasks: Mutex::new(tasks),
+        tasks: Mutex::new(vec![]),
         parent_select_mode: false.into(),
         parent: Mutex::new(String::new()),
+        folder_path: Mutex::new(String::new()),
     };
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .manage(app_state)
         .invoke_handler(tauri::generate_handler![
             greet,
@@ -392,7 +401,8 @@ pub fn run() {
             remove_dependency,
             add_dependency,
             create_and_link_dependency,
-            search_tasks
+            search_tasks,
+            set_folder_path
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -24,15 +24,15 @@ const statusBackground: Record<string, string> = {
 };
 
 const priorityColors: Record<string, string> = {
-  low: "#ffd700",
-  medium: "#ff6b6b",
-  high: "#4dff91",
+  low: "#b7b7b7",
+  med: "#ffd700",
+  high: "#ff6b6b",
 };
 
 const priorityBackground: Record<string, string> = {
-  low: "#3d3a1a",
-  medium: "#3d1a1a",
-  high: "#1a3d2a",
+  low: "#2f2f2f",
+  med: "#2a2a2a",
+  high: "#3d1a1a",
 };
 function getDaysOpen(
   created: string | null,
